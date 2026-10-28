@@ -1,0 +1,2194 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Intersection Monitor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one scrolling page. Frosted sticky header, then full-width cards stacked in reading order:
+   3D model → wait times → camera coverage → parts → wiring → build guide → OpenSCAD source. */
+:root{
+  --bg:#eef0f4; --card:#ffffff; --card-h:#f8f9fb; --glass:rgba(246,247,250,.78); --glass-2:rgba(255,255,255,.88);
+  --fg:#17191e; --fg-2:#5c606a; --fg-3:#868a94; --line:rgba(18,22,34,.11); --line-2:rgba(18,22,34,.05);
+  --accent:#0a66d6; --accent-fg:#ffffff; --sel:rgba(10,102,214,.12); --hover:rgba(18,22,34,.05);
+  --cam-a:#1f78e6; --cam-b:#e8740c; --buy:#1f7a4a; --buy-bg:rgba(31,122,74,.12); --print:#6a46d6; --print-bg:rgba(106,70,214,.12);
+  --ok:#1b9450; --warn:#b97800; --crit:#d23a2c; --sig-r:#e5483b; --sig-y:#e7a21b; --sig-g:#22a35a;
+  --w-ac:#17191e; --w-n:#b9bcc4; --w-pe:#1f9a4a; --w-dc:#d8322a; --w-dc0:#2b3f9e; --w-csi:#9aa0ab; --w-pcie:#d69a25; --w-coax:#59606b;
+  --scene:#f3f4f6; --code-bg:#fbfbfd; --code-kw:#a626a4; --code-num:#986801; --code-str:#50a14f; --code-com:#8b8f99; --code-fn:#2a62c9;
+  --shadow:0 18px 50px rgba(8,12,24,.18),0 0 0 .5px rgba(0,0,0,.18); --shadow-sm:0 1px 2px rgba(10,14,24,.05),0 8px 24px rgba(10,14,24,.05);
+  --chip:rgba(255,255,255,.9); --track:rgba(18,22,34,.12); --w-usb:#2f6fd6; --sc-ground:#eceef1; --sc-road:#c4c9d1; --sc-mark:#ffffff;
+  --mono:var(--ui);
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111215; --card:#1d1e22; --card-h:#212226; --glass:rgba(22,23,27,.74); --glass-2:rgba(32,33,38,.9);
+  --fg:#eef0f4; --fg-2:#a5a9b3; --fg-3:#7c818c; --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.04);
+  --accent:#3d8cff; --accent-fg:#ffffff; --sel:rgba(61,140,255,.2); --hover:rgba(255,255,255,.06);
+  --cam-a:#4b95ff; --cam-b:#ff9a3d; --buy:#4cc485; --buy-bg:rgba(76,196,133,.15); --print:#a68bff; --print-bg:rgba(166,139,255,.16);
+  --ok:#42c47b; --warn:#e2a935; --crit:#ff6a5c; --sig-r:#ff5d50; --sig-y:#f2b330; --sig-g:#3bc472;
+  --w-ac:#d4d7de; --w-n:#8d929c; --w-pe:#42c47b; --w-dc:#ff5d52; --w-dc0:#8a9bff; --w-csi:#7d8490; --w-pcie:#e2a935; --w-coax:#9aa1ad;
+  --scene:#17191d; --code-bg:#18191c; --code-kw:#d389ff; --code-num:#e5b567; --code-str:#9ad57e; --code-com:#6f7480; --code-fn:#74aaff;
+  --shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.12); --shadow-sm:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --chip:rgba(30,32,38,.9); --track:rgba(255,255,255,.14); --w-usb:#6aa0ff; --sc-ground:#1c1f24; --sc-road:#2f343b; --sc-mark:#7b838f;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111215; --card:#1d1e22; --card-h:#212226; --glass:rgba(22,23,27,.74); --glass-2:rgba(32,33,38,.9);
+  --fg:#eef0f4; --fg-2:#a5a9b3; --fg-3:#7c818c; --line:rgba(255,255,255,.1); --line-2:rgba(255,255,255,.04);
+  --accent:#3d8cff; --accent-fg:#ffffff; --sel:rgba(61,140,255,.2); --hover:rgba(255,255,255,.06);
+  --cam-a:#4b95ff; --cam-b:#ff9a3d; --buy:#4cc485; --buy-bg:rgba(76,196,133,.15); --print:#a68bff; --print-bg:rgba(166,139,255,.16);
+  --ok:#42c47b; --warn:#e2a935; --crit:#ff6a5c; --sig-r:#ff5d50; --sig-y:#f2b330; --sig-g:#3bc472;
+  --w-ac:#d4d7de; --w-n:#8d929c; --w-pe:#42c47b; --w-dc:#ff5d52; --w-dc0:#8a9bff; --w-csi:#7d8490; --w-pcie:#e2a935; --w-coax:#9aa1ad;
+  --scene:#17191d; --code-bg:#18191c; --code-kw:#d389ff; --code-num:#e5b567; --code-str:#9ad57e; --code-com:#6f7480; --code-fn:#74aaff;
+  --shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.12); --shadow-sm:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --chip:rgba(30,32,38,.9); --track:rgba(255,255,255,.14); --w-usb:#6aa0ff; --sc-ground:#1c1f24; --sc-road:#2f343b; --sc-mark:#7b838f;
+  color-scheme:dark }
+
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;font:14px/1.5 var(--ui);font-variant-numeric:tabular-nums;color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--glass);border-bottom:1px solid var(--line);
+  backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)}
+.top-in{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:14px;height:52px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:9px;font-weight:680;font-size:14.5px;white-space:nowrap;font-family:var(--display)}
+.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-left:auto;min-width:0}
+.nav a{padding:5px 10px;border-radius:7px;color:var(--fg-2);text-decoration:none;font-size:13px;white-space:nowrap}
+.nav a:hover{background:var(--hover);color:var(--fg)}
+.nav a[aria-current="page"]{background:var(--sel);color:var(--accent);font-weight:560}
+.icon-btn{border:1px solid var(--line);background:var(--card);border-radius:8px;width:32px;height:30px;display:grid;place-items:center;cursor:pointer;flex:none}
+.icon-btn svg{width:16px;height:16px}
+
+/* ---------- page ---------- */
+main{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:22px;padding-block:22px 64px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.intro{display:flex;flex-wrap:wrap;gap:16px 40px;align-items:flex-end;justify-content:space-between}
+.intro h1{font:700 clamp(25px,3.4vw,36px)/1.12 var(--display);letter-spacing:-.022em;margin:0;text-wrap:balance}
+.intro p{margin:8px 0 0;color:var(--fg-2);max-width:64ch}
+.stats{display:flex;gap:26px;flex-wrap:wrap}
+.stat b{display:block;font:650 20px/1.2 var(--display);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat span{font-size:12px;color:var(--fg-3)}
+section{scroll-margin-top:66px}
+.page-head h1{font:700 clamp(22px,3vw,30px)/1.15 var(--display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+.page-head p{margin:6px 0 0;color:var(--fg-2);max-width:72ch}
+main:not([data-page="model"]) .card-h > h2,main:not([data-page="model"]) .card-h > .sub{display:none}
+main:not([data-page="model"]) .card-h.title-only{display:none}
+main.enter > *:not([hidden]){animation:pgin .28s ease both}
+@keyframes pgin{from{opacity:.55;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pager{display:flex;gap:12px;flex-wrap:wrap}
+.pager a{flex:1 1 220px;max-width:340px;display:flex;flex-direction:column;gap:2px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);text-decoration:none;color:var(--fg);box-shadow:var(--shadow-sm);min-width:0}
+.pager a:hover{border-color:var(--accent)}
+.pager a span{font-size:11.5px;color:var(--fg-3)}
+.pager a b{font-weight:600}
+.pager a.next{margin-left:auto;text-align:right}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;min-width:0}
+.card-h{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;padding:11px 14px 11px 16px;border-bottom:1px solid var(--line);background:var(--card-h)}
+.card-h h2{font:650 15px/1.3 var(--display);margin:0;letter-spacing:-.005em}
+.card-h .sub{color:var(--fg-3);font-size:12.5px}
+.tools{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+
+/* controls */
+.seg{display:inline-flex;background:var(--line-2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;flex:none;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg button{border:0;background:none;padding:3px 11px;border-radius:6px;cursor:pointer;white-space:nowrap;font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.15),0 0 0 .5px var(--line)}
+.tbtn{border:1px solid transparent;background:none;border-radius:7px;padding:4px 7px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px;color:var(--fg-2);white-space:nowrap}
+.tbtn:hover{background:var(--hover)}
+.tbtn[aria-pressed="true"]{color:var(--accent);background:var(--sel)}
+.tbtn svg{width:15px;height:15px;flex:none}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12.5px;box-shadow:0 1px 1px rgba(0,0,0,.05)}
+.btn:hover{border-color:var(--fg-3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn:disabled{opacity:.45;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.chip.buy{color:var(--buy);background:var(--buy-bg)}
+.chip.print{color:var(--print);background:var(--print-bg)}
+.chip.opt{color:var(--fg-2);background:var(--line-2);border:1px solid var(--line)}
+.chip i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* ---------- 3D viewer ---------- */
+.viewer{display:flex;height:min(76vh,780px);min-height:480px;position:relative}
+.sidebar{flex:none;width:226px;overflow:auto;background:var(--card-h);border-right:1px solid var(--line);padding:8px 8px 14px}
+.side-h{font-size:11px;font-weight:650;color:var(--fg-3);padding:10px 8px 4px;letter-spacing:.03em}
+.side-item{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12.5px}
+.side-item:hover{background:var(--hover)}
+.side-item[aria-current="true"]{background:var(--sel)}
+.side-item .dot{width:8px;height:8px;border-radius:2px;flex:none}
+.side-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-item .ic{width:16px;height:16px;flex:none;color:var(--accent)}
+.stage{flex:1;min-width:0;position:relative;overflow:hidden;background:var(--scene)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#gl{touch-action:none}
+#hud2d{pointer-events:none}
+#callouts{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;pointer-events:auto;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 7px 3px;
+  font-size:11.5px;line-height:1.25;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.1);cursor:pointer;max-width:220px}
+.lbl b{font-weight:620;display:block;overflow:hidden;text-overflow:ellipsis}
+.lbl span{font-family:var(--mono);font-size:10px;color:var(--fg-2)}
+.lbl.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--sel)}
+.lbl.compact span{display:none}
+.ctag{position:absolute;transform:translate(-50%,-100%);font:650 10.5px/1 var(--mono);padding:3px 5px;border-radius:5px;color:#fff;white-space:nowrap;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.ctag.a{background:#1f6fd6}.ctag.b{background:#d4680a}.ctag.n{background:rgba(80,84,92,.92)}
+.dimtxt{position:absolute;font:600 11px var(--mono);color:var(--fg);background:var(--chip);padding:0 4px;border-radius:3px;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap}
+.hud{position:absolute;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none;max-width:calc(100% - 20px)}
+.hud .pill{background:var(--chip);border:1px solid var(--line);border-radius:99px;padding:3px 9px;font-size:11.5px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.pill i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.zoombar{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;background:var(--glass-2);border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 4px 14px rgba(0,0,0,.15);overflow:hidden;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.zoombar button{width:34px;height:32px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--fg)}
+.zoombar button + button{border-top:1px solid var(--line)}
+.zoombar button:hover{background:var(--hover)}
+.zoombar svg{width:16px;height:16px}
+.stage-hint{position:absolute;right:10px;top:10px;font-size:11px;color:var(--fg-2);background:var(--chip);border-radius:6px;padding:2px 8px;pointer-events:none}
+.mount-card{position:absolute;left:12px;right:12px;bottom:12px;max-width:520px;background:var(--glass-2);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.mount-card h4{margin:0 0 2px;font-size:13.5px}
+.mount-card p{margin:0 0 8px;color:var(--fg-2);font-size:12.5px;max-width:62ch}
+.mc-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mc-dots{display:flex;gap:4px;margin-right:auto}
+.mc-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.mc-dots i.on{background:var(--accent)}
+.inspector{position:absolute;right:10px;top:10px;width:270px;max-height:calc(100% - 20px);overflow:auto;z-index:4;background:var(--glass-2);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px 14px;box-shadow:var(--shadow);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.inspector.empty{display:none}
+.inspector h3{margin:6px 0 4px;font-size:15px;line-height:1.25;text-wrap:balance;padding-right:44px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;margin:10px 0}
+.kv dt{color:var(--fg-3)}.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.inspector p{font-size:12.5px;color:var(--fg-2);margin:8px 0}
+.insp-close{position:absolute;right:8px;top:8px}
+
+/* ---------- wait times ---------- */
+.live{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.live-tbl{padding:4px 0 14px;border-right:1px solid var(--line);min-width:0;overflow-x:auto}
+.live-side{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.foot{font-size:12px;color:var(--fg-3);margin:10px 16px 0;max-width:80ch}
+.wt .seen{color:var(--fg-3);font-size:11px;display:block}
+.ring{display:grid;gap:6px}
+.ring-row{display:grid;grid-template-columns:74px minmax(0,1fr);align-items:center;gap:8px;font-size:12px}
+.ring-bar{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--line-2)}
+.ring-bar span{display:grid;place-items:center;font:600 10.5px var(--mono);color:#fff;white-space:nowrap;overflow:hidden;min-width:0}
+.ring-bar .g{background:var(--sig-g)}.ring-bar .y{background:var(--sig-y)}.ring-bar .r{background:var(--sig-r)}
+.ring-bar .ew{opacity:.78}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card-h);min-width:0}
+.kpi b{display:block;font:650 18px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--fg-3)}
+
+/* ---------- coverage ---------- */
+.cov{display:flex;min-width:0}
+.cov-map{flex:none;padding:16px;display:flex;flex-direction:column;gap:10px;border-right:1px solid var(--line);background:var(--card-h);max-width:100%;box-sizing:border-box}
+#covCanvas{width:360px;height:360px;border-radius:10px;display:block;max-width:100%;aspect-ratio:1}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--fg-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.cov-ctl{flex:1;min-width:0;padding:16px 20px 20px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px 30px;align-content:start}
+@media (min-width:1180px){.cov-ctl{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}}
+.cov-ctl > div{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ctl-h{font-size:11px;font-weight:650;color:var(--fg-3);letter-spacing:.03em}
+.slider{display:grid;grid-template-columns:1fr auto;gap:8px 10px;align-items:center;font-size:12.5px;padding:2px 0}
+.slider output{font:500 11.5px var(--mono);color:var(--fg);background:var(--line-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-variant-numeric:tabular-nums}
+.slider input{grid-column:1/-1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:16px;margin:0;background:transparent;cursor:pointer;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) var(--p),var(--track) var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#fff;border:.5px solid rgba(0,0,0,.22);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--track)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:.5px solid rgba(0,0,0,.22);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+input[type=range]:focus-visible{outline:none}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--sel),0 1px 3px rgba(0,0,0,.3)}
+input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px var(--sel),0 1px 3px rgba(0,0,0,.3)}
+.covtbl{display:grid;grid-template-columns:auto minmax(110px,1fr) minmax(110px,1fr);column-gap:18px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.covtbl > div{padding:9px 0;border-bottom:1px solid var(--line-2);min-width:0;display:flex;align-items:center}
+.covtbl > .h{font-size:11px;color:var(--fg-3);padding:0 0 7px;border-bottom:1px solid var(--line);align-items:flex-end;line-height:1.3}
+.covtbl .nm{font-weight:560;white-space:nowrap}
+.meter{display:grid;grid-template-columns:minmax(0,1fr) 40px;align-items:center;gap:10px;width:100%}
+.meter .tr{position:relative;height:4px;border-radius:2px;background:var(--track)}
+.meter .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--accent);transition:width .25s}
+.meter .tr.soft i{background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.meter .tr b{position:absolute;top:-4px;bottom:-4px;width:1.5px;border-radius:1px;background:var(--fg-3)}
+.meter span{text-align:right;font:500 11.5px var(--mono)}
+.meter span.low{color:var(--warn)}
+.covkey{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--fg-3)}
+.covkey i{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.note{font-size:12px;color:var(--fg-2);background:var(--line-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;max-width:60ch}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.ctl-fields{border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:12px;transition:opacity .2s}
+.aimrows{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.aimrow{border:1px solid var(--line);border-radius:10px;padding:9px 11px 11px;display:flex;flex-direction:column;gap:8px;background:var(--card-h);min-width:0}
+.aimh{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;font-size:12.5px}
+.aimh i{width:9px;height:9px;border-radius:50%;display:inline-block;align-self:center}
+.aimh span{color:var(--fg-3);font-size:11.5px}
+.scale{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;padding:16px;align-items:center}
+.scale-svg svg{width:100%;height:auto;display:block;border-radius:10px;max-width:320px}
+.scale-text{margin:0;max-width:62ch;color:var(--fg-2);font-size:13px}
+.scale-text b{color:var(--fg)}
+.costnote{font-size:12.5px;color:var(--fg-2);margin-top:4px}
+.costnote b{color:var(--fg)}
+.bom td.grp{font-size:11px;font-weight:650;color:var(--fg-3);letter-spacing:.03em;padding-top:14px;text-transform:uppercase}
+.num-badge{display:inline-grid;place-items:center;min-width:20px;height:18px;border-radius:5px;background:var(--line-2);border:1px solid var(--line);font:600 10.5px var(--mono);color:var(--fg-2);margin-right:7px;vertical-align:1px}
+
+/* ---------- tables, docs, code ---------- */
+.scroll-x{overflow-x:auto}
+table.bom{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.bom th{text-align:left;font-weight:600;color:var(--fg-2);font-size:11.5px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.bom td{padding:7px 10px;border-bottom:1px solid var(--line-2);vertical-align:top}
+.bom td.num,.bom th.num{text-align:right;white-space:nowrap}
+.bom .spec{color:var(--fg-2);font-size:12px}
+.bom tr.click{cursor:pointer}.bom tr.click:hover td{background:var(--sel)}
+.budget{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.budget-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.budget-top strong{font:700 24px var(--display);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.bmeter{position:relative;height:10px;border-radius:5px;background:var(--line-2);border:1px solid var(--line)}
+.bmeter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--ok)}
+.bmeter b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg-2)}
+.bscale{position:relative;height:14px;font-size:11px;color:var(--fg-3)}
+.bscale span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.pad{padding:16px}
+.doc{max-width:72ch;font-size:13.5px;min-width:0}
+.doc h2{font:650 17px var(--display);margin:2px 0 8px;text-wrap:balance}
+.doc h3{font-size:14px;margin:18px 0 6px}
+.doc ol,.doc ul{padding-left:20px;margin:6px 0}
+.doc li{margin:4px 0}
+.doc code{font-family:var(--mono);font-size:11.5px;background:var(--line-2);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.warnbox{border:1px solid color-mix(in srgb,var(--crit) 40%,transparent);background:color-mix(in srgb,var(--crit) 8%,transparent);border-radius:9px;padding:9px 12px;font-size:12.5px;margin:10px 0}
+.guide{display:flex;min-width:0}
+.guide .pad{flex:1;min-width:0;overflow-x:auto}
+.tabs-side{flex:none;width:190px;border-right:1px solid var(--line);background:var(--card-h);padding:8px}
+.scad-wrap{max-height:620px;overflow:auto}
+pre.code{margin:0;padding:12px 0;font:12px/1.55 var(--mono);background:var(--code-bg);counter-reset:ln;min-width:max-content}
+pre.code .ln{display:block;padding:0 16px 0 0}
+pre.code .ln::before{counter-increment:ln;content:counter(ln);display:inline-block;width:38px;margin-right:14px;text-align:right;color:var(--fg-3);opacity:.6}
+.k{color:var(--code-kw)}.n{color:var(--code-num)}.s{color:var(--code-str)}.c{color:var(--code-com);font-style:italic}.f{color:var(--code-fn)}
+.wiring svg{display:block;width:100%;min-width:640px;height:auto}
+.wiring text{font-family:var(--ui)}
+.toast{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:100;background:var(--glass-2);color:var(--fg);padding:8px 14px;border-radius:10px;
+  box-shadow:var(--shadow);font-size:12.5px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100vw - 32px)}
+
+@media (max-width:980px){
+  .live{grid-template-columns:minmax(0,1fr)}
+  .live-tbl{border-right:0;border-bottom:1px solid var(--line)}
+  .cov{flex-direction:column}
+  .cov-map{border-right:0;border-bottom:1px solid var(--line);align-items:center}
+  .cov-ctl{grid-template-columns:minmax(0,1fr)}
+  .scale{grid-template-columns:minmax(0,1fr);justify-items:center}
+}
+@media (max-width:760px){
+  .top-in{flex-wrap:wrap;height:auto;padding-block:8px;row-gap:6px}
+  .brand{margin-right:auto}
+  .nav{order:3;width:100%;margin-left:0}
+  section{scroll-margin-top:100px}
+  .viewer{height:72vh;min-height:440px}
+  .sidebar{position:absolute;left:0;top:0;bottom:0;z-index:5;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow)}
+  .viewer.side-open .sidebar{transform:none}
+  .inspector{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:55%}
+  .tabs-side{width:120px}
+  .stage-hint{display:none}
+  .kpis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+.buy{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:6px;font-size:11.5px;line-height:1.4}.buy a{color:var(--accent);text-decoration:none;white-space:nowrap}.buy a:hover{text-decoration:underline}.buy span{color:var(--fg-3)}
+</style>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><svg width="12" height="20" viewBox="0 0 11 17" aria-hidden="true"><rect x=".5" y=".5" width="10" height="16" rx="3" fill="currentColor"/><circle cx="5.5" cy="4" r="2" fill="#ff5f57"/><circle cx="5.5" cy="8.5" r="2" fill="#febc2e"/><circle cx="5.5" cy="13" r="2" fill="#28c840"/></svg>Intersection Monitor</div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#model">3D model</a><a href="#coverage">Coverage</a><a href="#wiring">Wiring</a><a href="#guide">Build guide</a><a href="#scad">OpenSCAD</a>
+    </nav>
+    <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark appearance" title="Light / dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <div class="intro" id="intro">
+    <div>
+      <h1>A $875 camera unit for a traffic-signal pole</h1>
+      <p>Four cameras on one corner signal pole, one aimed down each approach at its stop line and queue. Inside a weatherproof box, a Raspberry Pi 5 with a 13 TOPS AI accelerator detects vehicles on the device. It plugs into an outlet on the pole through a sealed 12 V adapter, so 120 V never enters the box, and costs about $875 to build, cellular link included.</p>
+    </div>
+    <div class="stats" id="introStats"></div>
+  </div>
+
+  <div class="page-head" id="pageHead" hidden></div>
+
+  <!-- ================= 3D MODEL ================= -->
+  <section class="card" id="model" aria-label="3D model">
+    <div class="card-h">
+      <button class="tbtn" id="sideBtn" aria-label="Show or hide the parts list" title="Parts list"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/></svg></button>
+      <h2>3D model</h2>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="View" id="viewSeg">
+          <button data-view="installed" aria-pressed="true">Installed</button><button data-view="mounting">Mounting</button><button data-view="exterior">Exterior</button><button data-view="interior">Interior</button><button data-view="exploded">Exploded</button>
+        </div>
+        <button class="tbtn" data-tog="labels" aria-pressed="true" title="Labels (L)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 3.5h7l4 4.5-4 4.5H2z"/><circle cx="5" cy="8" r="1"/></svg>Labels</button>
+        <button class="tbtn" data-tog="cones" aria-pressed="true" title="Viewing cones (C)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 8l12-5v10z"/></svg>Cones</button>
+        <button class="tbtn" data-tog="wiring" aria-pressed="true" title="Wiring (W)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 12c4 0 3-8 7-8h5M2 6h3c3 0 2 6 6 6h3"/></svg>Wiring</button>
+        <button class="tbtn" data-tog="dims" aria-pressed="false" title="Dimensions (D)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 11h12M2 9v4M14 9v4M5 2l-2 2 2 2M3 4h7"/></svg>Dims</button>
+      </div>
+    </div>
+    <div class="viewer" id="viewerBody">
+      <aside class="sidebar" id="vSide" aria-label="Views and parts"></aside>
+      <div class="stage" id="stage">
+        <canvas id="gl" aria-label="3D model of the pole-mounted traffic monitor"></canvas>
+        <canvas id="hud2d"></canvas>
+        <svg id="callouts" aria-hidden="true"></svg>
+        <div id="labels"></div>
+        <div class="hud" id="hudTop" style="left:10px;top:10px"></div>
+        <div class="stage-hint" id="stageHint">Drag to orbit · scroll or pinch to zoom · right-drag to pan</div>
+        <div class="zoombar" role="group" aria-label="Zoom">
+          <button id="zoomIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button>
+          <button id="zoomOut" aria-label="Zoom out" title="Zoom out (−)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 8h10"/></svg></button>
+          <button id="zoomReset" aria-label="Reset view" title="Reset view (0)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M13.5 6V2.5H10M2.5 10v3.5H6M13.5 10v3.5H10"/></svg></button>
+        </div>
+        <div class="mount-card" id="mountCard" hidden>
+          <div class="mc-row" style="margin-bottom:4px"><span class="chip opt" id="mcStep">Step 1 of 7</span></div>
+          <h4 id="mcTitle"></h4>
+          <p id="mcText"></p>
+          <div class="mc-row"><div class="mc-dots" id="mcDots"></div><button class="btn" id="mcPrev">Back</button><button class="btn" id="mcReplay">Replay</button><button class="btn primary" id="mcNext">Next step</button></div>
+        </div>
+        <aside class="inspector empty" id="insp" aria-live="polite"></aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PARTS ================= -->
+  <section class="card" id="parts" data-page="model" aria-label="Parts and budget">
+    <div class="card-h"><h2>Parts &amp; budget</h2>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Filter" id="bomSeg"><button data-f="all" aria-pressed="true">All</button><button data-f="buy">Buy</button><button data-f="print">3D print</button></div>
+        <button class="btn" data-act="copy:csv">Copy CSV</button>
+      </div>
+    </div>
+    <div class="budget" id="budget"></div>
+    <div class="scroll-x"><table class="bom" id="bomTable"></table></div>
+  </section>
+
+  <!-- ================= COVERAGE ================= -->
+  <section class="card" id="coverage" aria-label="Camera coverage">
+    <div class="card-h"><h2>Camera coverage</h2><span class="sub">Top-down, 160 × 160 m. Shaded ground is inside a camera's view.</span>
+      <div class="tools" style="margin-left:0"><span class="ctl-h" style="margin-right:4px">DESIGN</span>
+        <div class="seg" role="group" aria-label="Design version" id="designSeg"><button data-d="v2" aria-pressed="true">v2 · 4 cameras, full approach coverage</button><button data-d="v1" aria-pressed="false">v1 · coverage gaps found</button></div>
+      </div>
+    </div>
+    <div class="cov">
+      <div class="cov-map">
+        <canvas id="covCanvas" width="360" height="360" aria-label="Top-down coverage map of the intersection"></canvas>
+        <div class="legend" id="legendCams"></div>
+      </div>
+      <div class="cov-ctl">
+        <div>
+          <div class="ctl-h">SHARE OF EACH APPROACH IN VIEW</div>
+          <div class="covtbl" id="covRes"></div>
+          <div class="note" id="covWhy" style="margin:8px 0 0"></div>
+          <div class="covkey"><span><i style="background:var(--accent)"></i>Stop-bar queue, where cars wait</span><span><i style="background:color-mix(in srgb,var(--accent) 45%,transparent)"></i>Whole 60 m queue</span><span><i style="background:var(--fg-3);width:2px;height:10px"></i>90% target</span></div>
+          <div class="btn-row"><button class="btn primary" id="optBtn">Optimize aim</button><button class="btn" id="resetBtn">Reset</button></div>
+          <div class="note" id="fovNote"></div>
+        </div>
+        <fieldset id="ctlFields" class="ctl-fields">
+          <div class="ctl-h">INSTALLATION</div>
+          <div id="sliders" style="display:flex;flex-direction:column;gap:10px"></div>
+          <div class="ctl-h" style="margin-top:6px">CAMERA AIM · SET ON EACH CAMERA'S SWIVEL BRACKET</div>
+          <div id="aimRows" class="aimrows"></div>
+        </fieldset>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="scale" data-page="coverage" aria-label="Large intersections">
+    <div class="card-h"><h2>Large intersections</h2><span class="sub">Scaling to wide roads</span>
+      <div class="tools"><div class="seg" role="group" aria-label="Intersection size" id="scaleSeg"><button data-s="std" aria-pressed="true">Up to 2 lanes each way</button><button data-s="big" aria-pressed="false">3+ lanes each way</button></div></div>
+    </div>
+    <div class="scale"><div id="scaleSvg" class="scale-svg"></div><p id="scaleText" class="scale-text"></p></div>
+  </section>
+
+  <!-- ================= WIRING ================= -->
+  <section class="card" id="wiring" aria-label="Wiring">
+    <div class="card-h title-only"><h2>Wiring</h2><span class="sub">12 V adapter on the pole → fuse and surge → 5 V converter → Pi 5 · four cameras → USB</span></div>
+    <div class="wiring pad" id="wiringBody"></div>
+  </section>
+
+  <!-- ================= GUIDE ================= -->
+  <section class="card" id="guide" aria-label="Build guide">
+    <div class="card-h title-only"><h2>Build guide</h2></div>
+    <div class="guide"><aside class="tabs-side" id="guideTabs"></aside><div class="pad"><article class="doc" id="guideDoc"></article></div></div>
+  </section>
+
+  <!-- ================= SCAD ================= -->
+  <section class="card" id="scad" aria-label="OpenSCAD source">
+    <div class="card-h"><h2>device.scad</h2><span class="sub" id="scadInfo"></span>
+      <div class="tools"><span id="copyMsg" style="font-size:12px;color:var(--ok)"></span><button class="btn primary" data-act="copy:scad">Copy code</button></div>
+    </div>
+    <div class="scad-wrap"><pre class="code" id="scadCode"></pre></div>
+  </section>
+  <nav class="pager" id="pager" aria-label="Previous and next page"></nav>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="text/plain" id="scadSrc">
+// =====================================================================
+//  INTERSECTION MONITOR — pole-mounted traffic-signal camera node
+//  Design v3: four identical outdoor USB cameras, one aimed down each approach
+//  Student engineering project (Conrad Challenge / ACSEF)
+//  OpenSCAD 2021.01+   ·   all units in millimetres
+//
+//  FRAME:  X = across the enclosure (camera A on the +X wall)
+//          Y = away from the pole, toward the street
+//          Z = up
+//  ORIGIN: the point on the FRONT SURFACE of the pole at mount height
+//          (where the strut pads touch the pole).
+//
+//  Use the Customizer (Window ▸ Customizer) to switch views and to
+//  export the printable parts one at a time (mode = print_*).
+// =====================================================================
+
+/* [View] */
+mode = "assembly"; // [assembly, exploded, interior, mounting, print_plate, print_template, print_visor]
+show_pole   = true;
+show_cones  = true;   // camera viewing cones (display only)
+show_wiring = true;   // 12 V, 5 V and USB routing
+cone_len    = 450;    // drawn length of viewing cones (display only)
+
+/* [Installation] */
+pole_d    = 250;   // [150:5:300] pole outside diameter at mount height
+
+/* [Camera aim — copy the numbers from the Camera coverage page] */
+// turn = camera turned on its swivel (+ = toward the street for A and B, toward the A side for C and D)
+// tilt = camera tilted down from level. Set both on the pole, then lock the swivel.
+cam_A_turn = -17;  // [-60:1:60] Camera A · south approach · right wall
+cam_A_tilt = 29;   // [0:1:45]
+cam_B_turn = -6;   // [-60:1:60] Camera B · east approach · left wall
+cam_B_tilt = 20;   // [0:1:45]
+cam_C_turn = 31;   // [-60:1:60] Camera C · north approach · lid
+cam_C_tilt = 16;   // [0:1:45]
+cam_D_turn = -39;  // [-60:1:60] Camera D · west approach · lid
+cam_D_tilt = 16;   // [0:1:45]  faces west: steep enough to keep the evening sun out of the lens
+
+/* [Camera — measure the first one you buy] */
+cam_base_d     = 60;   // swivel base diameter
+cam_base_pcd   = 46;   // circle through the base's 3 screw holes
+cam_body_d     = 42;   // housing diameter (sets the visor size)
+cam_hfov       = 77;   // 3.6 mm lens at 720p (estimate: check the first camera)
+cam_vfov       = 48;
+
+/* [Enclosure — IP66 polycarbonate junction box] */
+W     = 250;  // width  (X)
+H     = 200;  // height (Z)
+D     = 100;  // depth  (Y) incl. lid
+lid_d = 20;
+wall  = 3.5;
+
+$fn = 48;
+
+// ---------------------------------------------------------------------
+//  Derived values
+// ---------------------------------------------------------------------
+R      = pole_d / 2;
+body_d = D - lid_d;
+ex     = (mode == "exploded") ? 1 : 0;      // explode factor
+interior = (mode == "interior" || mode == "exploded");
+
+// pole mount: a bought strut-channel pole-mount kit, steel and 316 stainless only
+STRUT_Z  = [-108, 108];   // the two strut channels, one at each row of box feet
+STRUT_L  = 236;           // strut length (X)
+STRUT_H  = 41;            // strut height (Z)
+STRUT_D  = 21;            // strut depth (Y)
+PAD_T    = 3;             // rubber pad between strut and pole
+BOX_Y    = PAD_T + STRUT_D;   // box back face
+SAFETY_Z = STRUT_Z[1] + 150;  // tether eye bracket band, above the top strut
+EYE      = [-80, PAD_T + STRUT_D/2, STRUT_Z[1] + 38];   // M8 eye bolt through the top strut
+
+// cameras (box frame: box back at y = 0)
+CAM_POS  = [[ 125, 40, 45], [-125, 40, 45], [-62, D, 0], [62, D, 0]];   // A, B, C, D
+BUL_PIV  = 50;   // swivel ball, out from the wall
+BUL_UP   = 26;   // housing axis above the ball
+BUL_L    = 100;  // housing length
+
+// cable entry (icotek KEL-ER) and vent on the underside
+ENTRY    = [20, 50];                 // cut-out centre (x, y)
+ENTRY_CUT = [98, 58];                // cut-out size
+ENTRY_X  = [-20, 0, 20, 40, 60];     // grommets: cameras A–D, then 12 V
+VENT_X   = -85;
+
+// ---------------------------------------------------------------------
+//  Colours
+// ---------------------------------------------------------------------
+C_BOX    = [0.86, 0.87, 0.86];
+C_LID    = [0.80, 0.82, 0.82];
+C_STEEL  = [0.62, 0.64, 0.66];
+C_STRUT  = [0.70, 0.72, 0.70];
+C_PRINT  = [0.20, 0.42, 0.85];   // 3D-printed parts (PETG/ASA)
+C_CAM    = [0.93, 0.93, 0.92];
+C_PCB    = [0.10, 0.45, 0.25];
+C_HAT    = [0.12, 0.35, 0.20];
+C_BLACK  = [0.12, 0.12, 0.13];
+C_GLASS  = [0.75, 0.90, 1.00, 0.45];
+C_POLE   = [0.45, 0.47, 0.45];
+C_CONES  = [[0.15,0.55,1.00,0.18], [1.00,0.55,0.10,0.18], [0.07,0.65,0.58,0.18], [0.55,0.36,0.96,0.18]];
+
+// ---------------------------------------------------------------------
+//  Helpers
+// ---------------------------------------------------------------------
+// rounded rectangle in XZ, extruded along +Y from y=0
+module rrect_y(w, h, d, r=5) {
+    hull() for (sx=[-1,1], sz=[-1,1])
+        translate([sx*(w/2-r), 0, sz*(h/2-r)])
+            rotate([-90,0,0]) cylinder(r=r, h=d);
+}
+
+// cube centred on X and Z, starting at y0
+module slab(x, y0, y1, z, cx=0, cz=0) {
+    translate([cx - x/2, y0, cz - z/2]) cube([x, y1 - y0, z]);
+}
+
+// a cable as a chain of hulled spheres
+module wire(pts, d=2.2) {
+    for (i=[0:len(pts)-2]) hull() {
+        translate(pts[i])   sphere(d=d, $fn=10);
+        translate(pts[i+1]) sphere(d=d, $fn=10);
+    }
+}
+
+module bolt_z(d, l) cylinder(d=d, h=l, center=true);
+
+// =====================================================================
+//  POLE, BANDS, STRUT KIT, TETHER
+// =====================================================================
+module pole() {
+    color(C_POLE) translate([0,-R,-700]) cylinder(d=pole_d, h=1400, $fn=96);
+}
+
+// 19 mm 316 stainless band (Band-It style) around the pole and through a strut channel
+module band_clamp() {
+    color(C_STEEL) difference() {
+        hull() {
+            translate([0,-R,-9.5]) cylinder(r=R+1.2, h=19, $fn=120);
+            translate([-35, PAD_T+6, -9.5]) cube([70, 1.2, 19]);
+        }
+        hull() {
+            translate([0,-R,-10]) cylinder(r=R, h=20, $fn=120);
+            translate([-34, PAD_T+6-0.01, -10]) cube([68, 0.01, 20]);
+        }
+    }
+    color(C_STEEL) translate([R*0.72, -R*0.3, -11]) cube([14, 8, 22]);   // buckle
+}
+
+// steel strut channel, open side toward the pole; box feet bolt to its front face
+module strut() {
+    color([0.15,0.15,0.15]) slab(STRUT_L, 0, PAD_T, STRUT_H - 6);                 // rubber pad
+    color(C_STRUT) difference() {
+        slab(STRUT_L, PAD_T, BOX_Y, STRUT_H);
+        slab(STRUT_L + 2, PAD_T - 1, BOX_Y - 2.5, STRUT_H - 5);                  // channel
+        for (x=[-100, 100]) translate([x, BOX_Y, 0]) rotate([90,0,0]) cylinder(d=9, h=8, center=true);
+    }
+    color(C_STEEL) for (x=[-100, 100]) translate([x, BOX_Y - 2.5, 0]) rotate([90,0,0]) cylinder(d=13, h=8, $fn=6);   // M8 into strut nut
+}
+
+// third band with an eye bracket: the tether hangs from it
+module safety_band() {
+    color(C_STEEL) {
+        difference() {
+            translate([0,-R,-9.5]) cylinder(r=R+1.2, h=19, $fn=120);
+            translate([0,-R,-10])  cylinder(r=R, h=20, $fn=120);
+        }
+        translate([-80, 9, -16]) rotate([0,90,0]) rotate_extrude($fn=24) translate([7,0]) circle(r=2);
+    }
+}
+
+// 3 mm 316 swaged lanyard from the eye bracket down to the eye bolt on the top strut (slack ≤ 10 mm)
+module tether() {
+    p0 = [-80, 9, SAFETY_Z - 23];
+    color(C_STEEL) {
+        translate(EYE) rotate([0,90,0]) rotate_extrude($fn=24) translate([6,0]) circle(r=1.8);
+        wire([p0, (p0+EYE)/2 + [0, 8, 0], EYE + [0, 0, 6]], 3);
+    }
+}
+
+// =====================================================================
+//  ENCLOSURE
+// =====================================================================
+module enclosure_body() {
+    color(C_BOX) difference() {
+        rrect_y(W, H, body_d, 6);
+        translate([0, wall, 0]) rrect_y(W-2*wall, H-2*wall, body_d, 4);
+        // side walls: 3 x Ø4.5 for each camera's swivel base (A on +X, B on -X)
+        for (s=[1,-1]) translate([s*W/2, CAM_POS[0][1], CAM_POS[0][2]]) rotate([0,90,0]) base_holes(wall+20);
+        // underside: cable-entry cut-out and M12 vent
+        translate([ENTRY[0], ENTRY[1], -H/2]) cube([ENTRY_CUT[0], ENTRY_CUT[1], 20], center=true);
+        translate([VENT_X, body_d/2, -H/2]) bolt_z(12.5, 20);
+    }
+    // external mounting feet (supplied with the box), bolted to the struts
+    color(C_BOX) for (sx=[-1,1], sz=[-1,1])
+        translate([sx*100 - 10, 0, sz>0 ? H/2-4 : -H/2-12]) cube([20, 5, 16]);
+}
+
+module lid() {
+    color(C_LID) difference() {
+        translate([0, body_d, 0]) rrect_y(W, H, lid_d, 6);
+        translate([0, body_d-0.01, 0]) rrect_y(W-2*wall, H-2*wall, lid_d-wall, 4);
+        for (c=[CAM_POS[2], CAM_POS[3]]) translate([c[0], D - wall/2, c[2]]) rotate([90,0,0]) base_holes(wall+2);
+    }
+    color(C_STEEL) for (sx=[-1,1], sz=[-1,1])
+        translate([sx*(W/2-10), D, sz*(H/2-10)]) rotate([-90,0,0]) cylinder(d=7, h=1.5);
+}
+
+// 1.5 mm aluminium, painted white; the roof sits on the top strut, 28 mm above the box
+module sun_shield() {
+    zr = STRUT_Z[1] + STRUT_H/2;
+    color([0.95,0.95,0.93]) {
+        translate([-85, PAD_T + 4, zr - 25]) cube([170, 1.5, 25]);      // tab bolted to the top strut
+        translate([-145, 0, zr]) cube([290, 125, 1.5]);                  // roof
+        translate([-145, 123.5, zr - 23]) cube([290, 1.5, 24]);          // front drip lip
+    }
+}
+
+module vent_plug() {                  // M12x1.5 ePTFE pressure-equalising vent
+    color([0.25,0.25,0.27]) { cylinder(d=17, h=3, $fn=6); translate([0,0,-9]) cylinder(d=15, h=9); }
+}
+
+// icotek KEL-ER split frame with KT grommets (frame drawn from below)
+module cable_entry() {
+    color(C_BLACK) difference() {
+        cube([110, 40 + 30, 6], center=true);
+        for (x=ENTRY_X) translate([x - ENTRY[0], 0, 0]) cylinder(d=10, h=8, center=true);
+    }
+    color([0.25,0.25,0.27]) for (x=ENTRY_X) translate([x - ENTRY[0], 0, -2]) cylinder(d=14, h=4, center=true);
+}
+
+// =====================================================================
+//  CAMERAS: bought outdoor bullet cameras on their own swivel brackets
+//  Local frame: +X = out of the wall, Z = up. The base sits on the wall at the origin.
+// =====================================================================
+module base_holes(l) {
+    for (a=[90, 210, 330]) rotate([0,0,a]) translate([cam_base_pcd/2, 0, 0]) cylinder(d=4.5, h=l, center=true);
+}
+
+module viewing_cone(c) {
+    color(c) hull() {
+        sphere(d=1, $fn=6);
+        translate([cone_len, 0, 0]) cube([0.1, 2*cone_len*tan(cam_hfov/2), 2*cone_len*tan(cam_vfov/2)], center=true);
+    }
+}
+
+module bullet_camera(turn, tilt, cone_c) {
+    color(C_CAM) {
+        rotate([0,90,0]) cylinder(d=cam_base_d, h=8);                               // swivel base, 3 screws + gasket
+        hull() { translate([8,0,0]) rotate([0,90,0]) cylinder(d=18, h=1); translate([BUL_PIV,0,0]) sphere(d=16); }   // arm
+    }
+    translate([BUL_PIV, 0, 0]) rotate([0,0,turn]) rotate([0,tilt,0]) {
+        color(C_STEEL) sphere(d=18);
+        translate([-30, 0, BUL_UP]) {
+            color(C_CAM) {
+                rotate([0,90,0]) cylinder(d=cam_body_d, h=BUL_L);                    // housing
+                translate([0,-10, -BUL_UP]) cube([24, 20, BUL_UP - cam_body_d/2 + 2]);   // saddle to the ball
+            }
+            color(C_GLASS) translate([BUL_L - 1, 0, 0]) rotate([0,90,0]) cylinder(d=cam_body_d - 6, h=1.2);
+            color(C_PRINT) visor();
+            if (show_cones && ex == 0) translate([BUL_L, 0, 0]) viewing_cone(cone_c);
+        }
+    }
+}
+
+// printed white ASA sun visor: a 240° hood over the front of the housing, zip-tied on
+VIS_L = 55;
+module visor_shape() {
+    difference() {
+        cylinder(d=cam_body_d + 7, h=VIS_L);
+        translate([0,0,-1]) cylinder(d=cam_body_d + 0.6, h=VIS_L + 2);
+        rotate([0,0,-60]) translate([0,0,-1]) cube([cam_body_d, cam_body_d, VIS_L + 2]);      // open underneath
+        rotate([0,0,-30]) translate([0,0,-1]) cube([cam_body_d, cam_body_d, VIS_L + 2]);
+        for (z=[8, 22]) translate([0,0,z]) difference() { cylinder(d=cam_body_d + 9, h=5); cylinder(d=cam_body_d + 4, h=5); }   // zip-tie grooves
+    }
+}
+module visor() { translate([BUL_L - 30, 0, 0]) rotate([0,90,0]) rotate([0,0,180]) visor_shape(); }
+
+// =====================================================================
+//  INTERIOR
+// =====================================================================
+PLATE_Y = 9.5;           // printed plate sits on 6 mm bosses
+PLATE_T2 = 4;
+TOP = PLATE_Y + PLATE_T2;   // 13.5 — top of mounting plate
+
+module mounting_plate() {   // 214 x 170 x 4 printed PETG
+    color(C_PRINT) difference() {
+        slab(214, PLATE_Y, TOP, 170);
+        for (sx=[-1,1], sz=[-1,1]) translate([sx*97, 0, sz*75]) rotate([-90,0,0]) cylinder(d=4.5, h=40);       // box bosses
+        for (x=[-39,19], z=[20.5,69.5]) translate([x-35, 0, z]) rotate([-90,0,0]) cylinder(d=2.7, h=40);     // Pi 5 M2.5 (58 x 49)
+        for (x=[-26,26]) translate([x, 0, -55]) rotate([-90,0,0]) cylinder(d=2.7, h=40);                     // converter
+        for (x=[30,94], z=[10,70]) translate([x, 0, z]) rotate([-90,0,0]) cylinder(d=4.5, h=40);             // router straps
+        for (x=[-90:20:90]) translate([x-2, PLATE_Y-1, -82]) cube([4, 6, 8]);                                // cable-tie slots
+    }
+}
+
+module standoffs() {
+    color([0.80,0.68,0.30]) for (x=[-39,19], z=[20.5,69.5]) translate([x-35, TOP, z]) rotate([-90,0,0]) cylinder(d=5, h=10, $fn=6);
+}
+
+module raspberry_pi5() {    // 85 x 56 x 1.6 mm board, centre at (-35, 45)
+    translate([-35, TOP+10, 45]) {
+        color(C_PCB) translate([-42.5, 0, -28]) cube([85, 1.6, 56]);
+        color(C_STEEL) {
+            translate([42.5-17, 1.6, 4])   cube([21, 15.6, 13.1]);   // USB 2 stack
+            translate([42.5-17, 1.6, -13]) cube([21, 15.6, 13.1]);   // USB 3 stack
+            translate([42.5-17, 1.6, -27]) cube([21, 13.5, 14]);     // Ethernet (approx.)
+            translate([-34, 1.6, -28]) cube([9, 3.2, 7]);            // USB-C power
+        }
+        color(C_BLACK) {
+            translate([-35.5, 1.6, 21.5]) cube([51, 8.5, 5]);        // 40-pin GPIO header
+            translate([-42.5, 1.6, -6]) cube([4, 2.5, 13]);          // PCIe FPC
+        }
+    }
+}
+
+module active_cooler() {    // Raspberry Pi Active Cooler (approx. 50 x 40 x 9)
+    translate([-35, TOP+11.6, 45]) {
+        color([0.55,0.57,0.60]) translate([-26, 0, -18]) cube([50, 6, 40]);
+        color(C_BLACK) translate([-2, 6, 2]) rotate([-90,0,0]) cylinder(d=30, h=3);
+    }
+}
+
+module ai_hat() {           // AI HAT+ 13 TOPS (Hailo-8L), 65 x 56.5, on 16 mm stacking header
+    translate([-35, TOP+10+1.6+16, 45]) {
+        color(C_HAT) translate([-42.5, 0, -28]) cube([65, 1.6, 56.5]);
+        color(C_BLACK) translate([-14, 1.6, -6]) cube([16, 1.2, 16]);        // Hailo-8L package
+        color(C_BLACK) translate([-35.5, -16, 21.5]) cube([51, 16, 5]);       // stacking header
+        color([0.85,0.60,0.15]) translate([-42.5, -15, -6]) cube([1, 15, 13]); // PCIe flex to Pi
+    }
+}
+
+module microsd() { color([0.15,0.15,0.6]) translate([-35-44.5, TOP+10-1.2, 45-5.5]) cube([15, 0.8, 11]); }
+
+module converter() {        // Pololu D36V50F5, 12 V -> 5 V 5.5 A, on M2.5 standoffs (drawn as its heatsinked board)
+    color([0.12,0.30,0.55]) translate([0, TOP + 14, -55]) cube([64, 22, 40], center=true);
+}
+
+module fuse_and_tvs() {     // inline 4 A blade fuse holder + 5KP15A TVS diode across +12 V / 0 V
+    translate([60, TOP + 6, -60]) {
+        color([0.85,0.20,0.15]) cube([28, 10, 14], center=true);
+        color(C_BLACK) translate([0, 0, 18]) rotate([0,90,0]) cylinder(d=8, h=10, center=true);
+    }
+}
+
+module router() {           // Teltonika RUT200 LTE router: 83 x 74 x 25, antennas inside the box
+    color([0.91,0.92,0.93]) translate([62, TOP + 12.5, 40]) cube([83, 25, 74], center=true);
+    color(C_BLACK) for (z=[12,68]) translate([96, TOP + 22, z]) cylinder(d=8, h=40, center=true);
+}
+
+module interior_wiring() {
+    // camera leads: grommets -> USB ports (A, B on the USB 3 stack; C, D on the USB 2 stack)
+    usb = [[11,37,-2], [11,29,-6], [11,37,15], [11,29,11]];
+    for (i=[0:3]) color([0.17,0.17,0.19])
+        wire([[ENTRY_X[i], ENTRY[1], -H/2+6], [ENTRY_X[i], 45, -60], [11, 40, -30], [usb[i][0], usb[i][1], usb[i][2] + 45 - 45]], 4);
+    // 12 V: grommet -> fuse/TVS -> converter; 5 V: converter -> USB-C on the Pi; 12 V to the router
+    color([0.80,0.15,0.12]) {
+        wire([[ENTRY_X[4], ENTRY[1], -H/2+6], [60, 30, -75], [60, TOP+6, -60]], 2.6);
+        wire([[46, TOP+6, -60], [32, TOP+14, -55]], 2);
+        wire([[-32, TOP+14, -55], [-60, TOP+18, -10], [-65, TOP+13, 17]], 3);
+        wire([[70, TOP+10, -48], [74, TOP+12, 3]], 1.8);
+    }
+}
+
+module interior_parts() {
+    translate([0, ex*60,  0]) mounting_plate();
+    translate([0, ex*80,  0]) standoffs();
+    translate([0, ex*110, 0]) { raspberry_pi5(); microsd(); }
+    translate([0, ex*150, 0]) active_cooler();
+    translate([0, ex*210, 0]) ai_hat();
+    translate([0, ex*100, 0]) { converter(); fuse_and_tvs(); }
+    translate([0, ex*130, 0]) router();
+    if (show_wiring && ex == 0) interior_wiring();
+}
+
+// =====================================================================
+//  ASSEMBLIES
+// =====================================================================
+module cameras() {
+    // A on the +X wall, B on the -X wall (mirrored), C and D on the lid
+    translate([W/2 + ex*80, CAM_POS[0][1], CAM_POS[0][2]]) bullet_camera(cam_A_turn, cam_A_tilt, C_CONES[0]);
+    mirror([1,0,0]) translate([W/2 + ex*80, CAM_POS[1][1], CAM_POS[1][2]]) bullet_camera(cam_B_turn, cam_B_tilt, C_CONES[1]);
+    for (i=[2,3]) translate([CAM_POS[i][0], D + ex*200, CAM_POS[i][2]]) rotate([0,0,90])
+        bullet_camera(i == 2 ? cam_C_turn : cam_D_turn, i == 2 ? cam_C_tilt : cam_D_tilt, C_CONES[i]);
+}
+
+// each camera's own lead runs down the outside of the box, makes a drip loop and rises into its grommet
+module camera_leads() {
+    starts = [[W/2 + 6, CAM_POS[0][1], CAM_POS[0][2] - 20], [-W/2 - 6, CAM_POS[1][1], CAM_POS[1][2] - 20],
+              [CAM_POS[2][0], D + 6, -30], [CAM_POS[3][0], D + 6, -30]];
+    for (i=[0:3]) color([0.17,0.17,0.19]) {
+        s = starts[i]; g = [ENTRY_X[i], ENTRY[1], -H/2 - 6];
+        wire([s, [s[0], s[1], -H/2 + 10], [s[0]*0.7 + g[0]*0.3, (s[1] + g[1])/2, -H/2 - 55], [g[0], g[1], -H/2 - 50], g], 4.5);
+    }
+}
+
+module box_assembly() {
+    enclosure_body();
+    if (mode != "interior") translate([0, ex*220, 0]) lid();
+    if (interior) interior_parts();
+    cameras();
+    translate([0, 0, -H/2 - ex*60]) {
+        translate([ENTRY[0], ENTRY[1], -3]) cable_entry();
+        translate([VENT_X, body_d/2, 0]) vent_plug();
+    }
+    if (show_wiring && ex == 0) camera_leads();
+}
+
+// 12 V adapter strapped to the pole below the box, plugged into the GFCI outlet; its cord makes a drip loop
+module power_feed() {
+    color([0.55,0.56,0.57]) translate([-45, -15, -470]) cube([75, 30, 120]);          // outlet box + in-use cover
+    color([0.10,0.10,0.10]) translate([10, -12, -560]) cube([45, 28, 90]);            // IP67 12 V adapter
+    color([0.08,0.08,0.08]) wire([[32, 4, -470], [40, 40, -420], [60, BOX_Y + 60, -H/2 - 90], [ENTRY_X[4], BOX_Y + ENTRY[1], -H/2 - 75], [ENTRY_X[4], BOX_Y + ENTRY[1], -H/2 - 6]], 3);
+}
+
+// =====================================================================
+//  PRINTED PARTS
+// =====================================================================
+// drilling template: 2 mm sheets with Ø4.5 holes; tape to the box, drill through
+module template_sheet(w, h, holes, label) {
+    difference() {
+        cube([w, h, 2]);
+        for (p=holes) translate([p[0], p[1], 0]) base_holes(10);
+        translate([4, 4, 1.2]) linear_extrude(1) text(label, size=6);
+    }
+}
+module drilling_template() {
+    // side wall: the camera base, measured from the box back (y) and its centre line (z)
+    template_sheet(body_d, H, [[CAM_POS[0][1], H/2 + CAM_POS[0][2]]], "SIDE A / B");
+    // lid: both camera bases
+    translate([body_d + 10, 0, 0]) template_sheet(W, H, [[W/2 + CAM_POS[2][0], H/2], [W/2 + CAM_POS[3][0], H/2]], "LID C / D");
+    // underside: cable-entry cut-out and vent
+    translate([0, H + 10, 0]) difference() {
+        cube([W, body_d, 2]);
+        translate([W/2 + ENTRY[0] - ENTRY_CUT[0]/2, ENTRY[1] - ENTRY_CUT[1]/2, -1]) cube([ENTRY_CUT[0], ENTRY_CUT[1], 4]);
+        translate([W/2 + VENT_X, body_d/2, -1]) cylinder(d=12.5, h=4);
+        translate([4, 4, 1.2]) linear_extrude(1) text("UNDERSIDE", size=6);
+    }
+}
+
+// =====================================================================
+//  OUTPUT
+// =====================================================================
+if (mode == "print_plate") {
+    rotate([90,0,0]) translate([0,-PLATE_Y,0]) mounting_plate();
+} else if (mode == "print_template") {
+    drilling_template();
+} else if (mode == "print_visor") {
+    // four visors standing on their open end: white ASA, 3 walls, no supports
+    for (i=[0:3]) translate([i*(cam_body_d + 15), 0, 0]) visor_shape();
+} else {
+    if (show_pole) pole();
+    for (z=STRUT_Z) translate([0, 0, z + (ex ? (z>0 ? 40 : -40) : 0)]) { band_clamp(); translate([0, ex*20, 0]) strut(); }
+    if (ex == 0) { translate([0, 0, SAFETY_Z]) safety_band(); tether(); }
+    if (mode != "interior") translate([0, 0, ex*90]) sun_shield();
+    if (mode != "mounting") translate([0, BOX_Y + ex*60, 0]) box_assembly();
+    if (mode == "assembly" && show_wiring) power_feed();
+}
+
+// =====================================================================
+//  BILL OF MATERIALS (printed to the console)
+// =====================================================================
+echo("BUY:   Raspberry Pi 5 4GB · AI HAT+ 13 TOPS · Active Cooler · SanDisk High Endurance 128 GB microSD · ML2020 RTC battery");
+echo("BUY:   4x ELP-USBFHD05MT-BH36 outdoor USB camera (OV2710, 3.6 mm, IP66, swivel bracket, 3 m lead): test one first");
+echo("BUY:   IP67 12 V 3 A LED driver with plug (ETL) · inline 4 A blade fuse · 5KP15A TVS · Pololu D36V50F5 5 V 5.5 A · USB-C pigtail");
+echo("BUY:   250x200x100 IP66 PC box · icotek KEL-ER + KT grommets · M12 ePTFE vent · aluminium sun shield · Teltonika RUT200 LTE router");
+echo("BUY:   Polycase pole-mount strut kit · 3x 19 mm 316 band + buckles · eye bracket, M8 DIN 580 eye bolt, 3 mm 316 lanyard, 2x quick links");
+echo("PRINT: mounting plate (PETG, 4+ walls) · drilling template · 4x white ASA camera visor");
+echo("NOTE:  120 V stays outside the box. Set PSU_MAX_CURRENT=5000 and usb_max_current_enable=1 so the Pi gives the cameras 1.6 A.");
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+// ====================================================================
+//  DATA: bill of materials (design v3: four identical outdoor cameras), 3D part catalog, guide text
+// ====================================================================
+const BOM = [
+  {n:1, id:'pi5', name:'Raspberry Pi 5 (4 GB)', qty:1, type:'buy', cost:110, spec:'85 × 56 mm board, BCM2712, two 22-pin camera ports, 4 × USB-A, PCIe ×1, RTC connector. Pi prices rose in 2026 (about $65 / $110 / $175 for 2 / 4 / 8 GB); the 2 GB board also runs this and saves about $45', buy:[['Raspberry Pi','https://www.raspberrypi.com/products/raspberry-pi-5/']]},
+  {n:2, id:'hat', name:'Raspberry Pi AI HAT+ (Hailo-8L, 13 TOPS)', qty:1, type:'buy', cost:70, spec:'Runs vehicle detection on all four camera streams · 65 × 56.5 mm, 16 mm stacking header. If out of stock, the 26 TOPS AI HAT+ (about $110) drops in', buy:[['Raspberry Pi','https://www.raspberrypi.com/products/ai-hat/']]},
+  {n:3, id:'cooler', name:'Raspberry Pi Active Cooler', qty:1, type:'buy', cost:5, spec:'Clip-on heatsink + PWM fan, fits under the HAT+', buy:[['Raspberry Pi','https://www.raspberrypi.com/products/active-cooler/']]},
+  {n:4, id:'cams', name:'ELP-USBFHD05MT-BH36 outdoor USB camera (cameras A–D)', qty:4, type:'buy', cost:51, star:true, spec:'All four cameras are this one model: 1080p OV2710 sensor, 3.6 mm lens (about 77° wide at 16:9, our estimate from the lens; 2.8 and 6 mm versions exist), sealed metal bullet housing sold as IP66, swivel bracket, 3 m USB lead already attached. Streams 720p MJPEG. Its IR LEDs cannot be switched off in software. Buy one first and check the seal, the bracket and the 720p picture width before ordering the other three.', buy:[['Amazon','https://www.amazon.com/s?k=ELP-USBFHD05MT-BH36'],['ELP store','https://www.webcamerausb.com/']]},
+  {n:5, id:'sd',     name:'microSD 128 GB, high endurance', qty:1, type:'buy', cost:20, spec:'A2 / V30, rated for continuous writes', buy:[['Amazon','https://www.amazon.com/s?k=SanDisk+High+Endurance+128GB+microSD+SDSQQNR-128G']]},
+  {n:6, id:'psu', name:'IP67 12 V 3 A (36 W) LED driver with a plug', qty:1, type:'buy', cost:20, star:true, spec:'Plugs into the city\'s GFCI outlet on the pole, so only 12 V DC comes down to the box. ETL listed and IP67, e.g. LEDupdates pw3awp; check the listing shows a plug, not bare leads. The unit draws about 15–20 W, so the driver runs near half load and stays cool in the sun. We found no plug-in adapter marked "wet location", so the city electrician must approve the exact one. Strap the brick to the pole so it never hangs from the outlet.', buy:[['Amazon','https://www.amazon.com/s?k=12V+3A+IP67+LED+driver+with+plug+ETL'],['LEDupdates','https://ledupdates.com/']]},
+  {n:7, id:'fuse', name:'Inline blade fuse holder + 4 A fuse, and a 5KP15A TVS diode', qty:1, type:'buy', cost:8, star:true, spec:'The fuse sits on +12 V right after the cable entry. The TVS diode goes across +12 V and 0 V after the fuse and clamps spikes that come down the cord.', buy:[['TVS (Digi-Key)','https://www.digikey.com/en/products/result?keywords=5KP15A'],['Fuse holder','https://www.amazon.com/s?k=inline+ATC+blade+fuse+holder+18AWG'],['4 A fuses','https://www.amazon.com/s?k=4A+ATC+blade+fuse']]},
+  {n:8, id:'dcdc', name:'Pololu D36V50F5 5 V 5.5 A step-down regulator', qty:1, type:'buy', cost:40, star:true, spec:'12 V in, 5 V out to the Pi through a short USB-C pigtail. Takes up to 50 V in and has reverse-voltage protection. Screws to the plate on M2.5 standoffs.', buy:[['Pololu','https://www.pololu.com/product/4091']]},
+  {n:9, id:'lte', name:'Teltonika RUT200 LTE router', qty:1, type:'buy', cost:120, star:true, spec:'Runs on the fused 12 V (Teltonika lists a 9–30 V input; check the datasheet) and talks to the Pi over a 0.5 m Ethernet patch cable, so the modem uses none of the Pi\'s USB ports or its 1.6 A USB power. Its antennas stay inside the box: polycarbonate lets radio through. Uploads the counts on its own and lets you check and fix the unit from anywhere. Needs a data SIM plan, roughly $5–15 a month (not included). Wi-Fi on the Pi stays for aiming the cameras and as a backup.', buy:[['Teltonika','https://teltonika-networks.com/products/routers/rut200'],['Amazon','https://www.amazon.com/s?k=Teltonika+RUT200']]},
+  {n:10, id:'box',    name:'IP66 polycarbonate enclosure, 250 × 200 × 100 mm', qty:1, type:'buy', cost:38, spec:'Grey lid, external mounting feet', buy:[['Amazon','https://www.amazon.com/s?k=IP66+polycarbonate+enclosure+250x200x100+mounting+feet']]},
+  {n:11, id:'entry', name:'icotek KEL-ER split cable-entry frame + KT grommets', qty:1, type:'buy', cost:45, star:true, spec:'The frame and the grommets both split, so the four camera leads and the 12 V cord go through with their plugs still on. IP66. One 98 × 58 mm cut-out in the underside replaces all the cable glands. Measure each cable and pick the matching KT grommet (a KT 4 fits 4–5 mm); blank grommets fill the spare holes.', buy:[['Mouser','https://www.mouser.com/c/?q=icotek%20KEL-ER'],['icotek','https://www.icotek.com/en/']]},
+  {n:12, id:'shield', name:'Aluminium sun shield', qty:1, type:'buy', cost:15, spec:'1.5 mm aluminium, 290 × 125 mm roof, painted white, 28 mm air gap. Its tab bolts to the top strut.', buy:[['SendCutSend','https://sendcutsend.com/']]},
+  {n:13, id:'vent',   name:'M12 ePTFE pressure vent', qty:1, type:'buy', cost:8, spec:'IP68 membrane vent', buy:[['Digi-Key','https://www.digikey.com/en/products/result?keywords=M12%20ePTFE%20pressure%20vent']]},
+  {n:14, id:'plate', name:'PETG mounting plate + standoffs', qty:1, type:'print', cost:0, spec:'214 × 170 × 4 mm PETG, at least 4 walls. Holds the Pi, the converter, the fuse and TVS and the LTE router on the box\'s four internal bosses.'},
+  {n:15, id:'visors', name:'Camera sun visors', qty:4, type:'print', cost:0, star:true, link:'camA', spec:'Small white ASA hoods, zip-tied over each camera, to keep low sun and rain off the glass. The cameras do not come with one.'},
+  {n:16, id:'rtc', name:'Raspberry Pi RTC Battery (ML2020 with JST lead)', qty:1, type:'buy', cost:5, spec:'Rechargeable cell for the Pi 5 RTC connector; keeps the clock and log timestamps through power cuts', buy:[['Raspberry Pi','https://www.raspberrypi.com/products/rtc-battery/']]},
+  {n:17, id:'kit', name:'Polycase PK-085AU universal pole-mount kit (strut channel)', qty:1, type:'buy', cost:35, star:true, spec:'Two steel strut channels that band to the pole, with the box feet bolted to them by M8 bolts and strut nuts. Replaces the custom cut aluminium bracket and its tilt joint, so nothing is cut, bent or levelled. Check the listing for the pole sizes it fits and measure the pole at 5.8 m first. Our 19 mm 316 bands run through the struts.', buy:[['Polycase','https://www.polycase.com/'],['Amazon','https://www.amazon.com/s?k=Polycase+pole+mount+kit']]},
+  {n:18, id:'bands', name:'316 stainless banding, 19 × 0.76 mm, 5 m + 3 buckles', qty:1, type:'buy', cost:35, spec:'BAND-IT style 3/4 in 316 band with matching 316 buckles: one band through each strut channel and one for the tether bracket. Needs a banding tool ($60–150, or borrow one from the city or an electrician).', buy:[['Band','https://www.amazon.com/s?k=3%2F4+inch+316+stainless+steel+banding+strap'],['Buckles','https://www.amazon.com/s?k=3%2F4+inch+316+stainless+steel+band+buckles']]},
+  {n:19, id:'tether', name:'Safety tether', qty:1, type:'buy', cost:36, spec:'316 pole-band eye bracket, M8 A4 DIN 580 eye bolt through the top strut, factory-swaged 3 mm 7×19 316 lanyard about 250 mm eye to eye (slack 10 mm or less), 2 × 316 quick links rated ≥ 5 kN.', buy:[['Eye bracket','https://www.amazon.com/s?k=316+stainless+pole+band+bracket+eye'],['Eye bolt','https://www.amazon.com/s?k=M8+DIN+580+eye+bolt+316+stainless'],['Lanyard','https://www.amazon.com/s?k=3mm+316+stainless+wire+rope+lanyard+swaged+eye'],['Quick links','https://www.amazon.com/s?k=316+stainless+quick+link+6mm']]},
+  {id:'hw',    group:'Also needed', name:'Stainless hardware kit', qty:1, type:'buy', cost:25, spec:'A4 (316) stainless: 4 × M8 × 25 bolts with strut spring nuts and lock washers (box feet to struts), 12 × M4 × 16 screws with bonded sealing washers (camera bases; check they fit the first camera\'s bracket), 4 × M2.5 standoffs + 8 screws, nylon P-clips, medium threadlocker.', buy:[['Bolt Depot','https://www.boltdepot.com/'],['Threadlocker','https://www.amazon.com/s?k=Loctite+243+medium+threadlocker']]},
+  {id:'dcw',   group:'Also needed', name:'USB-C pigtail, DC socket, hookup wire, ferrules', qty:1, type:'buy', cost:20, spec:'USB-C male pigtail with 18 AWG power wires rated 5 A (converter to Pi); a female DC socket pigtail that matches the adapter\'s plug (usually 5.5 × 2.1 mm); 18 AWG red and black hookup wire, about 1 m each; ferrules and a crimper; Velcro straps for the spare camera leads.', buy:[['Pigtail','https://www.amazon.com/s?k=USB+C+male+pigtail+cable+5A+18AWG'],['DC socket','https://www.amazon.com/s?k=5.5x2.1+female+DC+pigtail+18AWG'],['Ferrule kit','https://www.amazon.com/s?k=ferrule+crimper+kit+wire+ferrules']]},
+  {id:'seal',  group:'Also needed', name:'Silicone sealant + foam gasket tape', qty:1, type:'buy', cost:8, spec:'Neutral-cure, UV-rated', buy:[['Sealant','https://www.amazon.com/s?k=DOWSIL+795+neutral+cure+silicone'],['Foam tape','https://www.amazon.com/s?k=closed+cell+foam+gasket+tape+weatherproof']]},
+  {id:'fil',   group:'Also needed', name:'PETG (~150 g) + white ASA (~40 g) filament', qty:1, type:'buy', cost:8, spec:'PETG for the plate, white ASA for the visors; about $8 at $25–30 per kg.', buy:[['ASA','https://www.amazon.com/s?k=Polymaker+ASA+White+1kg'],['PETG','https://www.amazon.com/s?k=PETG+filament+1.75mm+1kg']]},
+];
+
+// 3D parts (what you can click). bom = which BOM row pays for it.
+const PART3D = [
+  {id:'pi5', grp:'Compute', name:'Raspberry Pi 5 (4 GB)', dims:'85 × 56 × 17 mm', bom:'pi5', home:'interior', where:'Upper-left of the mounting plate on four 10 mm M2.5 standoffs.', note:'Takes cameras A and B on its two camera ports and cameras C and D on its USB 3 ports, all streaming at the same time. Feed it 5.1 V through a USB-C pigtail and set PSU_MAX_CURRENT=5000.'},
+  {id:'hat', grp:'Compute', name:'AI HAT+ 13 TOPS', dims:'65 × 56.5 mm · Hailo-8L', bom:'hat', home:'interior', where:'Stacked 16 mm above the Pi, linked by the short PCIe flex.', note:'Runs vehicle detection on all four streams. About 10 frames per second per camera is plenty for counting queues.'},
+  {id:'cooler', grp:'Compute', name:'Active Cooler', dims:'≈ 50 × 40 × 9 mm', bom:'cooler', home:'interior', where:'Clipped onto the Pi 5 SoC, under the HAT+.', note:'The fan also stirs air inside the sealed box so heat reaches the walls.'},
+  {id:'sd', grp:'Compute', name:'microSD 128 GB HE', dims:'15 × 11 × 1 mm', bom:'sd', home:'interior', where:'Underside of the Pi, short edge.', note:'Log counts, not video, to keep writes low.'},
+  {id:'camA', grp:'Cameras', name:'Camera A · south approach', dims:'Outdoor USB · ≈ 77° × 48° · 720p', bom:'cams', home:'exterior', where:'Right side wall, on its own swivel bracket (3 screws through the box over a gasket).', note:'Plugs into the top USB 3 port. Set its turn and tilt from Camera coverage, then lock the swivel with threadlocker and paint a mark across the joint.'},
+  {id:'camB', grp:'Cameras', name:'Camera B · east approach', dims:'Outdoor USB · ≈ 77° × 48° · 720p', bom:'cams', home:'exterior', where:'Left side wall, on its own swivel bracket (3 screws through the box over a gasket).', note:'Plugs into the bottom USB 3 port. Set its turn and tilt from Camera coverage, then lock the swivel with threadlocker and paint a mark across the joint.'},
+  {id:'camC', grp:'Cameras', name:'Camera C · north approach', dims:'Outdoor USB · ≈ 77° × 48° · 720p', bom:'cams', home:'exterior', where:'Lid, left half, on its own swivel bracket (3 screws through the box over a gasket).', note:'Plugs into the top USB 2 port. Set its turn and tilt from Camera coverage, then lock the swivel with threadlocker and paint a mark across the joint. Leave 300 mm of slack in its lead so the lid can open.'},
+  {id:'camD', grp:'Cameras', name:'Camera D · west approach', dims:'Outdoor USB · ≈ 77° × 48° · 720p', bom:'cams', home:'exterior', where:'Lid, right half, on its own swivel bracket (3 screws through the box over a gasket).', note:'Plugs into the bottom USB 2 port. Set its turn and tilt from Camera coverage, then lock the swivel with threadlocker and paint a mark across the joint. Leave 300 mm of slack in its lead so the lid can open.'},
+  {id:'cables', grp:'Cameras', name:'Camera leads ×4', dims:'3 m · USB-A, attached', bom:'cams', home:'exterior', where:'From each camera down the outside of the box to a drip loop, then up through the cable-entry plate.', note:'Coil the spare length inside the box with Velcro. Label each lead A–D at both ends.'},
+  {id:'feed', grp:'Power', name:'12 V adapter + cord', dims:'IP67 · 12 V 3 A', bom:'psu', home:'mounting', where:'Plugged into the GFCI outlet under its in-use cover, about 0.45 m below the box.', note:'Strap the brick to the pole. Its cord drops into a drip loop under the box and enters through the cable-entry plate. 120 V never goes into the box.'},
+  {id:'tvs', grp:'Power', name:'Fuse + surge (TVS)', dims:'4 A blade fuse · 5KP15A', bom:'fuse', home:'interior', where:'Lower right of the plate, next to the cable entry.', note:'The fuse is first on +12 V; the TVS diode goes across +12 V and 0 V after it.'},
+  {id:'dcdc', grp:'Power', name:'5 V converter', dims:'Pololu D36V50F5 · 5 V 5.5 A', bom:'dcdc', home:'interior', where:'Lower middle of the plate, on M2.5 standoffs.', note:'Feeds the Pi through a short USB-C pigtail. Set PSU_MAX_CURRENT=5000 so the Pi allows 1.6 A for the cameras.'},
+  {id:'box', grp:'Enclosure', name:'IP66 PC enclosure', dims:'250 × 200 × 100 mm', bom:'box', home:'exterior', where:'Bolted to the two strut channels by its four feet.', note:'Every hole is drilled from the printed template. Polycarbonate lets the router\'s radio through.'},
+  {id:'lid', grp:'Enclosure', name:'Enclosure lid', dims:'250 × 200 × 20 mm', bom:'box', home:'exterior', where:'Front of the box, faces the intersection.', note:'Carries cameras C and D on their swivel brackets. Their leads run outside with 300 mm of slack, and a 316 lanyard holds the lid when it is open.'},
+  {id:'plate', grp:'Enclosure', name:'Mounting plate', dims:'214 × 170 × 4 mm', bom:'plate', home:'interior', where:'On the four internal bosses of the box.', note:'Printed PETG. Carries the Pi, the converter, the fuse and TVS and the LTE router.'},
+  {id:'shield', grp:'Enclosure', name:'Sun shield', dims:'290 × 125 mm · 28 mm gap', bom:'shield', home:'exterior', where:'Tab bolted to the top strut; the roof sits over the box.', note:'White paint and the air gap keep direct sun off the box roof.'},
+  {id:'entry', grp:'Enclosure', name:'Cable-entry plate', dims:'icotek KEL-ER · 98 × 58 mm', bom:'entry', home:'exterior', where:'Underside, middle.', note:'Split grommets let the four camera leads and the 12 V cord through with their plugs on. Blank grommets fill the spare holes.'},
+  {id:'vent', grp:'Enclosure', name:'Pressure vent', dims:'M12 · ePTFE', bom:'vent', home:'exterior', where:'Underside, left.', note:'Stops the box breathing damp air through the lid gasket overnight.'},
+  {id:'bands', grp:'Mount', name:'Band clamps ×2', dims:'19 mm 316 stainless', bom:'bands', home:'mounting', where:'Around the pole and through both strut channels, 216 mm apart.', note:'Either band alone holds the box. Re-tension both one week after install.'},
+  {id:'kit', grp:'Mount', name:'Pole-mount struts ×2', dims:'Polycase PK-085AU · steel strut', bom:'kit', home:'mounting', where:'Banded to the pole, one at each row of box feet.', note:'The box feet bolt to the struts with M8 bolts into strut spring nuts. Nothing to cut, bend or level: the cameras aim on their own swivels.'},
+  {id:'tether', grp:'Mount', name:'Safety tether', dims:'3 mm 316 swaged lanyard · eye bracket', bom:'tether', home:'mounting', where:'A 316 eye bracket on its own band above the box; the lanyard runs down to an eye bolt on the top strut.', note:'Clip it on before the box is lifted into place. It holds the box if both bands fail.'},
+  {id:'lte', grp:'Comms', name:'LTE router', dims:'Teltonika RUT200 · 83 × 74 × 25 mm', bom:'lte', home:'interior', where:'Upper right of the plate.', note:'Runs on the fused 12 V; a 0.5 m Ethernet patch cable goes to the Pi. Its antennas stay inside the box.'},
+];
+
+const VIEW_LABELS = {
+  installed: ['unit','poleL','camAc','camBc','camCc','camDc'],
+  mounting:  ['bands','kit','tether','shield','feed'],
+  exterior:  ['box','lid','shield','camA','camB','camC','camD','entry','vent','bands'],
+  interior:  ['pi5','hat','cooler','dcdc','tvs','lte','plate'],
+  exploded:  ['lid','shield','camA','camB','camC','hat','cooler','pi5','plate','dcdc','tvs','lte','entry','kit'],
+};
+
+const MOUNT_STEPS = [
+  {t:'The finished installation', d:'The unit sits about 5.8 m up a corner signal pole, just under the mast arm, with the lid facing the centre of the intersection. Four identical outdoor cameras each look down one approach toward its stop line.'},
+  {t:'Band the tether bracket', d:'Band the 316 eye bracket to the pole about 150 mm above where the top strut will go. Clip the swaged lanyard to it with a quick link now, so it is ready before the box leaves the ground.'},
+  {t:'Lift the box on its struts', d:'On the ground, bolt the box feet to the two strut channels with M8 bolts into strut spring nuts, fit the cameras and clip the lanyard\'s lower quick link to the eye bolt on the top strut. Then lift the whole pre-wired unit up to the pole, with the lid facing the intersection centre.'},
+  {t:'Band it to the pole', d:'Feed one 19 mm stainless band through each strut channel and around the pole, tension it with the banding tool and lock the buckle. Either band alone holds the box. Re-tension both one week after install.'},
+  {t:'Tighten and mark', d:'Check the strut bolts (M8 A4 about 17 N·m), then paint a stripe across every nut and buckle so any loosening shows from the ground.'},
+  {t:'Fit the sun shield', d:'The shield tab bolts to the top strut. The 28 mm air gap above the box roof keeps the electronics cool.'},
+  {t:'Plug in power', d:'The city electrician fits a GFCI outlet with an extra-duty in-use cover about 0.45 m below the box. Strap the 12 V adapter to the pole, plug it in and run its cord down into a drip loop and up through the cable-entry plate. Only 12 V DC goes into the box.'},
+  {t:'Check and aim the cameras', d:'Open all 4 live camera views on a laptop over Wi-Fi. Loosen each camera\'s swivel, turn and tilt it until its road\'s line of waiting cars runs up the middle of the picture, then lock it with threadlocker and paint a mark across the joint.'},
+];
+
+const GUIDE = {
+  print: {t:'What to print', h:`
+<h2>3D-printed parts</h2>
+<p>Nothing printed holds the unit up: the pole mount is a bought steel strut kit and stainless bands, and each camera comes in its own metal housing. Only three small things are printed.</p>
+<table class="bom"><thead><tr><th>Part</th><th>Qty</th><th>Material</th><th>Settings</th><th>OpenSCAD mode</th></tr></thead><tbody>
+<tr><td>Mounting plate</td><td>1</td><td>PETG</td><td>4+ walls, 25% gyroid, 0.2 mm</td><td><code>print_plate</code></td></tr>
+<tr><td>Drilling template (box sides and lid)</td><td>1</td><td>PETG or PLA</td><td>2 walls, 15% infill</td><td><code>print_template</code></td></tr>
+<tr><td>Camera sun visors</td><td>4</td><td>White ASA</td><td>3 walls, 20% gyroid, no supports</td><td><code>print_visor</code></td></tr>
+</tbody></table>
+<h3>Everything else is bought</h3>
+<p>Electronics, the four cameras, the enclosure, the cable-entry plate, the vent, the strut kit, bands and hardware. The sun shield is a flat aluminium part from a laser-cut service. See <b>Parts &amp; budget</b> under the 3D model.</p>
+<h3>Exporting from OpenSCAD</h3>
+<ol><li>Open <code>device.scad</code> and turn on Window ▸ Customizer.</li>
+<li>Measure your enclosure before printing and edit the box parameters to match. The model assumes a 250 × 200 × 100 mm box with a 194 × 150 mm boss pattern.</li>
+<li>Measure the first camera's swivel base and set <code>cam_base_holes</code> so the template's holes match it.</li>
+<li>Pick a <code>print_*</code> mode, press F6 to render, then File ▸ Export ▸ STL.</li></ol>`},
+  build: {t:'Assembly', h:`
+<h2>Assembling the box on the bench</h2>
+<ol>
+<li><b>Test one camera first.</b> Before buying all four: plug one camera into a Pi 5 and check the 720p picture is about as wide as Camera coverage assumes, hose-test the housing, and read its current on a USB meter with the IR LEDs on (cover the light sensor). All four together must stay under 1.6 A.</li>
+<li><b>Drill the box from the template.</b> Tape the printed template on and drill three Ø4.5 mm holes for each camera's swivel base (A on the right wall, B on the left wall, C and D on the lid), the 98 × 58 mm cut-out for the cable-entry plate and a Ø12.5 mm hole for the vent, both on the underside.</li>
+<li><b>Fit the cameras.</b> Bolt each swivel base to the box with M4 × 16 A4 screws and bonded sealing washers over a thin EPDM gasket, and a dab of neutral-cure silicone on each screw. Set each camera to roughly the turn and tilt from Camera coverage.</li>
+<li><b>Fit the cable-entry plate and vent.</b> Screw the KEL-ER frame over its cut-out. Each camera lead runs down the outside of the box, makes a drip loop below it and comes up through its own split grommet, plug and all. Leave 300 mm of slack on the C and D leads so the lid can open on its 316 lanyard. Label every lead A–D at both ends.</li>
+<li><b>Build the plate.</b> Screw four M2.5 standoffs for the Pi and two for the converter to the printed plate. Fit the Active Cooler to the Pi 5, plug the ML2020 cell into its RTC connector, mount the Pi, then the AI HAT+. Mount the converter, the fuse holder and the TVS diode, and the LTE router.</li>
+<li><b>Plug in the cameras.</b> A → top USB 3 port, B → bottom USB 3 port, C → top USB 2 port, D → bottom USB 2 port. This puts two cameras on each of the Pi's two USB buses. Coil the spare lead inside with Velcro.</li>
+<li><b>Wire the power.</b> DC socket from the cable entry → 4 A fuse on +12 V → TVS diode across +12 V and 0 V → converter VIN. Converter VOUT → USB-C pigtail → Pi. Run the router's 12 V pair from after the fuse and a 0.5 m Ethernet patch cable to the Pi. Use 18 AWG and ferrules.</li>
+<li><b>Bench test for 48 hours</b> with the 12 V adapter plugged into a GFCI outlet, in a sunny window, with all four cameras streaming.</li>
+</ol>
+<h3>Design notes</h3>
+<ul>
+<li>All four cameras are the same model, so there is only one camera to learn, one spare to keep and one driver (UVC) in software.</li>
+<li>Each camera has its own sealed metal housing and swivel bracket, so there are no printed pods, windows, ribbon cables or tilt joints to make, and aiming is done on the pole with a screwdriver.</li>
+<li>120 V stays outside the box. The 12 V adapter is a sealed, listed product plugged into the city's outlet, so nobody has to wire mains inside the box.</li>
+<li>The cameras' IR LEDs cannot be switched off. They light only about 10–20 m, so at 5.8 m they help with the near lanes; street lighting does the rest. Check the night pictures during the bench test.</li>
+</ul>`},
+  mount: {t:'Mounting on the pole', h:`
+<h2>Mounting on the signal pole</h2>
+<p>The 3D model at the top of this site walks through this in its <b>Mounting</b> view.</p>
+<ol>${MOUNT_STEPS.slice(1).map(s=>`<li><b>${s.t}.</b> ${s.d}</li>`).join('')}</ol>
+<h3>Where on the pole</h3>
+<ul><li>Box centre about 5–6 m up, near mast-arm height and just below it. Higher means each camera looks down its approach at a steeper angle, which separates queued cars better.</li>
+<li>On a corner pole, turn the box so the lid faces the intersection centre before you band it. Each camera then turns on its own swivel to its approach.</li>
+<li>For roads with 3 or more lanes each way, use two units on opposite corners. See Camera coverage.</li>
+<li>Check the strut kit fits the pole's diameter at 5.8 m before ordering.</li></ul>
+<h3>Why it will not come down</h3>
+<p>A box of about 6 kg falling from 5.8 m can kill someone, so the mount is designed so no single failure drops it.</p>
+<ul>
+<li><b>No plastic carries load.</b> Every part between the pole and the box is steel strut or 316 stainless. The box hangs on its four feet, bolted to the struts with M8 bolts.</li>
+<li><b>No joints to adjust.</b> The struts band solid to the pole; the only adjustable parts are the cameras' own swivels, which carry nothing but the camera.</li>
+<li><b>Two bands, each enough.</b> One band runs through each strut channel, so the channel stops it slipping off.</li>
+<li><b>Backup tether.</b> A 316 eye bracket on its own band, 150 mm above the top strut, carries a factory-swaged 3 mm 7×19 316 lanyard (about 5 kN breaking). Two 316 quick links rated ≥ 5 kN join it to an M8 DIN 580 eye bolt through the top strut before the box is lifted. Slack stays at 10 mm or less.</li>
+<li><b>Loads (estimates).</b> The unit weighs about 6 kg (≈ 60 N). A 150 km/h gust on its side adds about 100 N. Design rule: each band on its own and the tether on its own must hold at least 10× the unit's weight (600 N). A 10 mm drop onto the steel lanyard peaks at about 1.7 kN, so every tether part is rated at least 5 kN.</li>
+<li><b>Torque</b> (typical A4-70 stainless; check your bolt supplier's table): M8 ≈ 17 N·m, M4 ≈ 1.5 N·m.</li>
+<li><b>Inspect every year:</b> torque stripes unbroken, bands tight, lanyard and quick links intact, camera swivels still on their paint marks.</li>
+<li><b>Get it approved.</b> The city's traffic signal engineer must review and approve the mount and follow their pole-attachment standard before it goes up.</li>
+</ul>`},
+  safety: {t:'Power & safety', h:`
+<h2>Power and safety</h2>
+<div class="warnbox"><b>120 V AC can kill.</b> A licensed electrician or the city's signal crew fits the outlet on the pole. You build and test the box; nothing inside it is ever more than 12 V.</div>
+<ul>
+<li><b>Permission first.</b> Get written approval from the city traffic engineering department before anything touches a pole.</li>
+<li><b>Outlet.</b> A GFCI outlet in a weatherproof box. The electrical code (NEC 406.9(B)(1)) requires an extra-duty "in-use" cover for anything left plugged in outdoors, such as the Leviton 5980.</li>
+<li><b>Adapter.</b> An IP67, ETL-listed 12 V LED driver with a plug. We found no plug-in adapter actually marked for wet locations, so the city electrician must approve the exact one. Strap it to the pole so it never hangs from the outlet.</li>
+<li><b>Fuse.</b> 4 A blade fuse on +12 V, right after the cable entry. The unit draws about 1.5 A at 12 V.</li>
+<li><b>Surge.</b> A 5KP15A TVS diode across +12 V and 0 V after the fuse clamps spikes on the cord. The adapter's own isolation keeps mains surges out; the city's GFCI and breaker protect the 120 V side.</li>
+<li><b>Bench testing.</b> Plug the adapter into a GFCI outlet. Unplug it before opening the lid.</li>
+<li><b>Privacy.</b> Process video on the device and keep only counts and queue lengths. Do not store or send images, faces or plates.</li>
+</ul>`},
+  thermal: {t:'Heat & weather', h:`
+<h2>Heat and weather</h2>
+<ul>
+<li>With four cameras, the Pi and the AI HAT+ running, expect about 15–20 W including the LTE router. The Pi 5 throttles at about 85 °C.</li>
+<li>The white sun shield with a 28 mm air gap blocks direct sun on the roof, the hottest surface. The adapter is outside the box, so its heat stays out too.</li>
+<li>The printed visors keep low sun and rain off each camera's glass.</li>
+<li>The ePTFE vent equalises pressure so the box does not suck damp air through the gasket overnight.</li>
+<li>Every cable enters from the underside through split grommets, after a drip loop.</li>
+<li>Test: log <code>vcgencmd measure_temp</code> every minute during a sunny afternoon.</li>
+</ul>`},
+  sw: {t:'Software notes', h:`
+<h2>Software setup</h2>
+<ul>
+<li>Raspberry Pi OS (64-bit). All four cameras are UVC devices; list them with <code>v4l2-ctl --list-devices</code>. Open them by their <code>/dev/v4l/by-path/…</code> names, which follow the USB port, so identical cameras always keep their letters.</li>
+<li><b>Power for the cameras.</b> Run <code>sudo rpi-eeprom-config --edit</code> and add <code>PSU_MAX_CURRENT=5000</code>, and add <code>usb_max_current_enable=1</code> to <code>/boot/firmware/config.txt</code>. Without these the Pi limits all four USB ports to 600 mA in total; with them it allows 1.6 A.</li>
+<li><b>USB bandwidth.</b> Each of the Pi's two USB controllers shares one 480 Mbps bus between its USB 2 port and the USB 2 side of its USB 3 port, so two cameras share each bus. Ask each for 720p MJPEG at about 10 frames per second. If one fails with "No space left on device", lower its frame rate or resolution. Test with all four running in week one.</li>
+<li><b>Decoding.</b> The Pi 5 has no hardware H.264 decoder, so use the cameras' MJPEG output and decode it on the CPU. Benchmark four streams early.</li>
+<li><b>Detection and counting.</b> There is no ready-made line counter for the AI HAT+. Use the Hailo detection pipeline from <code>hailo-apps</code> (install with <code>sudo apt install hailo-all</code>), then track vehicles with the <code>supervision</code> library (ByteTrack) and count them with its <code>LineZone</code>. Seeed Studio's traffic-analytics example for the Hailo is a useful reference.</li>
+<li>In <code>/boot/firmware/config.txt</code> also add <code>dtparam=rtc_bbat_vchg=3000000</code> so the Pi trickle-charges the ML2020 cell, and <code>dtparam=pciex1_gen=3</code> for full AI HAT+ speed.</li>
+<li>In each camera's picture, mark the stop line and the queue area. Count vehicles crossing the line and in the area every second; that gives arrivals and queue length for each approach.</li>
+<li><b>LTE uplink.</b> Put a data SIM in the RUT200. Change its admin password, turn off remote admin from the internet, and reach it only through Teltonika's RMS service or a VPN. Have the Pi upload each hour's counts, and send an alert if an upload is missed.</li>
+<li>For the final aiming check on the pole, stream all four pictures to a laptop over the Pi's Wi-Fi.</li>
+</ul>`},
+};
+
+// ====================================================================
+//  APP
+// ====================================================================
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const D2R=Math.PI/180, V3=THREE.Vector3, V2=THREE.Vector2;
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isSmall=()=>innerWidth<=760;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// --------------------------------------------------------------------
+//  Parameters + state
+// --------------------------------------------------------------------
+// aim[i] = {toe, pitch} for camera i: toe turns the camera left/right on its swivel, pitch tilts it down
+const DEFAULTS={height:5.8,poleD:250,swivel:0,tilt:0,range:90,aim:[{toe:-17,pitch:29},{toe:-6,pitch:20},{toe:31,pitch:16},{toe:-39,pitch:16}]};
+const cloneP=o=>({...o,aim:o.aim.map(a=>({...a}))});
+const P=cloneP(DEFAULTS);
+// Design v1 (kept for comparison): two 102° wide cameras on opposite side walls
+const P1={height:6.0,poleD:250,swivel:7,tilt:0,range:75,aim:[{toe:19,pitch:20},{toe:19,pitch:20}]};
+const S={view:'installed',labels:true,cones:true,wiring:true,dims:false,sel:null,e:0,eT:0,step:0,speed:1,design:'v2',big:false};
+const ROAD=7.2, STOP=11, POLE_POS=new V3(9.2,0,9.2);
+const CHECK_STEP=MOUNT_STEPS.length-1;   // last mounting step: live camera views + final aim
+
+// --------------------------------------------------------------------
+//  Theme
+// --------------------------------------------------------------------
+let themeMode='system';
+try{themeMode=localStorage.getItem('im-theme')||'system'}catch(e){}
+const darkMQ=matchMedia('(prefers-color-scheme: dark)');
+const isDark=()=>themeMode==='dark'||(themeMode==='system'&&darkMQ.matches);
+function applyTheme(m){
+  themeMode=m;
+  if(m==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',m);
+  try{localStorage.setItem('im-theme',m)}catch(e){}
+  onThemeChange();
+}
+darkMQ.addEventListener('change',()=>onThemeChange());
+$('#themeBtn').addEventListener('click',()=>applyTheme(isDark()?'light':'dark'));
+
+// --------------------------------------------------------------------
+//  Toast + page plumbing
+// --------------------------------------------------------------------
+const toastEl=$('#toast');
+let toastT;function toast(m){toastEl.textContent=m;toastEl.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>toastEl.style.opacity=0,2400)}
+const SECT={viewer:'model',coverage:'coverage',bom:'model',wiring:'wiring',scad:'scad',guide:'guide'};
+function openWin(id){const p=SECT[id];if(!p)return;if(curPage!==p){location.hash=p;return}
+  const el=$(id==='viewer'?'#model':'#'+p);const r=el.getBoundingClientRect();if(r.top<0||r.top>innerHeight*0.4)el.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'})}
+// ---------- pages: each header tab is its own page (#model, #coverage, …) ----------
+const PAGES=[
+  {id:'model',t:'3D model'},
+  {id:'coverage',t:'Camera coverage',d:'Where the four cameras can see from the corner pole: one camera per approach, aimed at its stop line and the queue behind it. Switch to design v1 to see the gaps that led to the redesign.'},
+  {id:'wiring',t:'Wiring',d:'How the 12 V adapter on the pole becomes 5 V for the Pi, and how the four USB cameras connect. 120 V never enters the box.'},
+  {id:'guide',t:'Build guide',d:'Printing, bench assembly, mounting on the pole, safety and software setup.'},
+  {id:'scad',t:'OpenSCAD model',d:'The full parametric model. Paste it into OpenSCAD to render it, export STL files for printing, or change dimensions.'},
+];
+let curPage='model';
+function showPage(id,scroll=true){
+  if(!PAGES.some(p=>p.id===id))id='model';
+  const prev=curPage;curPage=id;const i=PAGES.findIndex(p=>p.id===id),pg=PAGES[i],main=$('main');
+  main.dataset.page=id;
+  $$('main > section').forEach(s=>s.hidden=(s.dataset.page||s.id)!==id);
+  $('#intro').hidden=id!=='model';
+  const ph=$('#pageHead');ph.hidden=id==='model';if(id!=='model')ph.innerHTML=`<h1>${esc(pg.t)}</h1><p>${esc(pg.d)}</p>`;
+  $$('.nav a').forEach(a=>a.toggleAttribute('aria-current',a.getAttribute('href')==='#'+id));
+  $$('.nav a[aria-current]').forEach(a=>a.setAttribute('aria-current','page'));
+  const pr=PAGES[i-1],nx=PAGES[i+1];
+  $('#pager').innerHTML=(pr?`<a href="#${pr.id}"><span>← Previous</span><b>${esc(pr.t)}</b></a>`:'')+(nx?`<a class="next" href="#${nx.id}"><span>Next →</span><b>${esc(nx.t)}</b></a>`:'');
+  if(scroll&&prev!==id&&!reduceMotion){main.classList.remove('enter');void main.offsetWidth;main.classList.add('enter')}
+  if(scroll)scrollTo({top:0,behavior:'auto'});
+  if(id==='coverage')requestAnimationFrame(drawCoverage);
+  if(id==='model')requestAnimationFrame(()=>{resizeStage()});
+}
+addEventListener('hashchange',()=>{showPage(location.hash.slice(1),true);setTimeout(()=>scrollTo(0,0),0)});
+try{history.scrollRestoration='manual'}catch(e){}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b)return;
+  const [k,v]=b.dataset.act.split(':');
+  if(k==='copy')copyText(v);else if(k==='open')openWin(v);
+});
+async function copyText(what){
+  const txt=what==='scad'?SCAD:bomCSV();
+  try{await navigator.clipboard.writeText(txt);toast(what==='scad'?'device.scad copied to the clipboard':'Parts list copied as CSV');
+    if(what==='scad'){$('#copyMsg').textContent='Copied';setTimeout(()=>$('#copyMsg').textContent='',2000)}}
+  catch(err){
+    if(what==='scad'){const r=document.createRange();r.selectNodeContents($('#scadCode'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Clipboard is blocked here. The code is selected; press Ctrl+C or ⌘C.')}
+    else toast('Clipboard is blocked here. The table below has the same list.');
+  }
+}
+
+// ====================================================================
+//  THREE.JS SCENE
+// ====================================================================
+const stage=$('#stage'), glc=$('#gl'), hud=$('#hud2d'), hctx=hud.getContext('2d');
+const renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.NoToneMapping;
+const scene=new THREE.Scene();
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(),0.04).texture;
+const camera=new THREE.PerspectiveCamera(38,1,0.02,1500);
+camera.position.set(32,24,38);
+const controls=new OrbitControls(camera,glc);
+controls.enableDamping=true;controls.dampingFactor=0.08;controls.zoomSpeed=1.8;controls.zoomToCursor=true;controls.maxPolarAngle=Math.PI*0.495;controls.minDistance=0.12;controls.maxDistance=420;
+controls.target.set(-2,0,-2);
+scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,1.25));
+const sun=new THREE.DirectionalLight(0xffffff,1.15);sun.position.set(-40,80,30);scene.add(sun);
+const fill=new THREE.DirectionalLight(0xffffff,0.45);fill.position.set(30,20,-40);scene.add(fill);
+scene.fog=new THREE.Fog(0xdde4ea,180,520);
+
+function M(color,o={}){
+  const m=new THREE.MeshStandardMaterial({color,roughness:o.r??0.6,metalness:o.m??0,side:o.side??THREE.FrontSide});
+  m.envMapIntensity=o.env??0.55;
+  if(o.t!=null){m.transparent=true;m.opacity=o.t;m.depthWrite=o.t>0.6}
+  if(o.em){m.emissive=new THREE.Color(o.em);m.emissiveIntensity=o.ei??1}
+  return m;
+}
+function mesh(geo,mat,x=0,y=0,z=0,parent){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(parent)parent.add(m);return m}
+const bx=(w,h,d,mat,x,y,z,p)=>mesh(new THREE.BoxGeometry(w,h,d),mat,x,y,z,p);
+const rbx=(w,h,d,r,mat,x,y,z,p)=>mesh(new RoundedBoxGeometry(w,h,d,3,r),mat,x,y,z,p);
+function cyl(r,h,mat,axis,x,y,z,p,seg=32,rTop){const g=new THREE.CylinderGeometry(rTop??r,r,h,seg);if(axis==='x')g.rotateZ(-Math.PI/2);if(axis==='z')g.rotateX(Math.PI/2);return mesh(g,mat,x,y,z,p)}
+function tube(pts,r,mat,p){const c=new THREE.CatmullRomCurve3(pts.map(q=>q.isVector3?q:new V3(...q)),false,'centripetal');return mesh(new THREE.TubeGeometry(c,Math.max(32,pts.length*18),r,8,false),mat,0,0,0,p)}
+function ribbonGeo(pts,width,dirFn,closed=false){
+  const pos=[],idx=[],n=pts.length;
+  for(let i=0;i<n;i++){const p=pts[i],w=dirFn(i,pts).multiplyScalar(width/2);pos.push(p.x-w.x,p.y-w.y,p.z-w.z,p.x+w.x,p.y+w.y,p.z+w.z)}
+  const segs=closed?n:n-1;
+  for(let i=0;i<segs;i++){const a=i*2,b=((i+1)%n)*2;idx.push(a,b,a+1,a+1,b,b+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;
+}
+function flatRibbon(pts,width,mat,p,ref=new V3(0,0,1)){
+  const c=new THREE.CatmullRomCurve3(pts.map(q=>q.isVector3?q:new V3(...q)),false,'centripetal');
+  const sp=c.getSpacedPoints(70);
+  const g=ribbonGeo(sp,width,(i,a)=>{const t=a[Math.min(i+1,a.length-1)].clone().sub(a[Math.max(i-1,0)]).normalize();let w=new V3().crossVectors(t,ref);if(w.lengthSq()<1e-4)w.crossVectors(t,new V3(0,1,0));return w.normalize()});
+  return mesh(g,mat,0,0,0,p);
+}
+function hull2(points){ // monotone chain, points [x,y]
+  const p=points.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[],up=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q)}
+  for(const q of p.reverse()){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q)}
+  up.pop();lo.pop();return lo.concat(up);
+}
+function disposeChildren(g){for(const ch of [...g.children]){g.remove(ch);ch.traverse(o=>{if(o.geometry)o.geometry.dispose()})}}
+
+// --------------------------------------------------------------------
+//  World: a flat, diagram-style intersection (no scenery)
+// --------------------------------------------------------------------
+const world=new THREE.Group();scene.add(world);
+const PAL_L={scene:'#f3f4f6',ground:'#eceef1',walk:'#dfe2e7',road:'#c4c9d1',mark:'#ffffff',center:'#e0b14a',pole:'#8b919a',head:'#3a3e45',car:'#fbfbfc',carEdge:'#5d636d',carN:'#a3a9b2'};
+const PAL_D={scene:'#17191d',ground:'#1c1f24',walk:'#23272d',road:'#2f343b',mark:'#7b838f',center:'#a7832f',pole:'#6f757e',head:'#121418',car:'#454b54',carEdge:'#a5adb8',carN:'#5d636c'};
+let PAL=PAL_L;
+function drawMap(ctx,s,cx,cy,L=110){
+  const X=x=>cx+x*s,Y=z=>cy+z*s,SW=ROAD+3,r=5;
+  ctx.fillStyle=PAL.ground;ctx.fillRect(X(-L),Y(-L),2*L*s,2*L*s);
+  ctx.fillStyle=PAL.walk;ctx.fillRect(X(-SW),Y(-L),2*SW*s,2*L*s);ctx.fillRect(X(-L),Y(-SW),2*L*s,2*SW*s);
+  ctx.fillStyle=PAL.road;ctx.fillRect(X(-ROAD),Y(-L),2*ROAD*s,2*L*s);ctx.fillRect(X(-L),Y(-ROAD),2*L*s,2*ROAD*s);
+  for(const sx of[-1,1])for(const sz of[-1,1]){ctx.fillStyle=PAL.road;ctx.fillRect(X(sx>0?ROAD:-ROAD-r),Y(sz>0?ROAD:-ROAD-r),r*s,r*s);
+    ctx.fillStyle=PAL.walk;ctx.beginPath();ctx.arc(X(sx*(ROAD+r)),Y(sz*(ROAD+r)),r*s,0,7);ctx.fill()}
+  const lw=Math.max(0.14*s,1);
+  ctx.fillStyle=PAL.center;for(const o of[-0.18,0.18]){
+    ctx.fillRect(X(o)-lw/2,Y(-L),lw,(L-STOP)*s);ctx.fillRect(X(o)-lw/2,Y(STOP),lw,(L-STOP)*s);
+    ctx.fillRect(X(-L),Y(o)-lw/2,(L-STOP)*s,lw);ctx.fillRect(X(STOP),Y(o)-lw/2,(L-STOP)*s,lw)}
+  ctx.fillStyle=PAL.mark;
+  for(const o of[-3.6,3.6])for(let d=STOP+2;d<L;d+=12){
+    ctx.fillRect(X(o)-lw/2,Y(d),lw,3*s);ctx.fillRect(X(o)-lw/2,Y(-d-3),lw,3*s);ctx.fillRect(X(d),Y(o)-lw/2,3*s,lw);ctx.fillRect(X(-d-3),Y(o)-lw/2,3*s,lw)}
+  const sb=0.45*s;
+  ctx.fillRect(X(-ROAD),Y(-STOP)-sb,ROAD*s,sb);ctx.fillRect(X(0),Y(STOP),ROAD*s,sb);ctx.fillRect(X(STOP),Y(-ROAD),sb,ROAD*s);ctx.fillRect(X(-STOP)-sb,Y(0),sb,ROAD*s);
+  for(let w=-ROAD+0.3;w<ROAD-0.4;w+=1.1){
+    ctx.fillRect(X(w),Y(-10.5),0.55*s,2.5*s);ctx.fillRect(X(w),Y(8),0.55*s,2.5*s);ctx.fillRect(X(-10.5),Y(w),2.5*s,0.55*s);ctx.fillRect(X(8),Y(w),2.5*s,0.55*s)}
+}
+const mapCanvas=document.createElement('canvas');mapCanvas.width=mapCanvas.height=2048;
+const mapTex=new THREE.CanvasTexture(mapCanvas);mapTex.colorSpace=THREE.SRGBColorSpace;mapTex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+function paintMap(){drawMap(mapCanvas.getContext('2d'),2048/220,1024,1024);mapTex.needsUpdate=true}
+const covU={uVP:{value:[0,1,2,3].map(()=>new THREE.Matrix4())},uP:{value:[0,1,2,3].map(()=>new V3())},
+  uC:{value:['#2f80ed','#ee7c1b','#12a594','#8b5cf6'].map(c=>new THREE.Color(c))},uRange:{value:75},uShow:{value:1}};
+const groundMat=new THREE.MeshStandardMaterial({map:mapTex,roughness:1});groundMat.envMapIntensity=0;
+groundMat.onBeforeCompile=sh=>{
+  Object.assign(sh.uniforms,covU);
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vFW;').replace('#include <begin_vertex>','#include <begin_vertex>\nvFW=(modelMatrix*vec4(transformed,1.0)).xyz;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+varying vec3 vFW;uniform mat4 uVP[4];uniform vec3 uP[4];uniform vec3 uC[4];uniform float uRange,uShow;
+float inCam(mat4 vp,vec3 p){vec4 c=vp*vec4(vFW.x,0.5,vFW.z,1.0);if(c.w<=0.0)return 0.0;vec2 n=c.xy/c.w;if(abs(n.x)>1.0||abs(n.y)>1.0)return 0.0;if(distance(vFW.xz,p.xz)>uRange)return 0.0;return 1.0;}`)
+  .replace('#include <map_fragment>',`#include <map_fragment>
+if(uShow>0.5){vec3 acc=vec3(0.0);float n=0.0;
+for(int i=0;i<4;i++){if(inCam(uVP[i],uP[i])>0.5){acc+=uC[i];n+=1.0;}}
+if(n>0.5)diffuseColor.rgb=mix(diffuseColor.rgb,acc/n,n>1.5?0.32:0.26);}`);
+};
+const ground=mesh(new THREE.PlaneGeometry(220,220),groundMat,0,0,0,world);ground.rotation.x=-Math.PI/2;
+const farMat=new THREE.MeshBasicMaterial({color:PAL.ground});
+const farGround=mesh(new THREE.PlaneGeometry(3000,3000),farMat,0,-0.4,0,world);farGround.rotation.x=-Math.PI/2;
+
+// --------------------------------------------------------------------
+//  Signal poles, mast arms, heads (same flat style as everything else)
+// --------------------------------------------------------------------
+const poleMat=M(PAL.pole,{r:.85,env:0}),headMat=M(PAL.head,{r:.8,env:0});
+const heads=[];
+function makePole(pos,armDir,armLen,face,app,dists,r=0.125){
+  const g=new THREE.Group();g.position.copy(pos);world.add(g);
+  const shaft=cyl(1,7.4,poleMat,'y',0,3.7,0,g,32,0.86);shaft.scale.set(r,1,r);
+  const arm=mesh(new THREE.CylinderGeometry(0.06,0.09,armLen,12),poleMat,0,0,0,g);
+  arm.quaternion.setFromUnitVectors(new V3(0,1,0),armDir);arm.position.copy(armDir.clone().multiplyScalar(armLen/2)).add(new V3(0,6.7,0));
+  for(const d of dists){
+    const h=new THREE.Group();h.position.copy(armDir.clone().multiplyScalar(d)).add(new V3(0,6.0,0));h.rotation.y=Math.atan2(face.x,face.z);g.add(h);
+    bx(0.4,1.12,0.28,headMat,0,0,0.1,h);cyl(0.025,0.6,poleMat,'y',0,0.95,0.1,h,8);
+    const lens=['#ff3b2f','#ffb21e','#2fd86b'].map((c,i)=>{const m=M('#222',{r:.4,env:0,em:c,ei:0.06});cyl(0.12,0.03,m,'z',0,0.34-i*0.34,0.25,h,20);return m});
+    heads.push({app,lens});
+  }
+  return {g,shaft};
+}
+const devPole=makePole(POLE_POS,new V3(-1,0,0),15.4,new V3(0,0,-1),'N',[11,14.6],P.poleD/2000);
+makePole(new V3(-9.2,0,-9.2),new V3(1,0,0),15.4,new V3(0,0,1),'S',[11,14.6]);
+makePole(new V3(9.2,0,-9.2),new V3(0,0,1),15.4,new V3(-1,0,0),'W',[11,14.6]);
+makePole(new V3(-9.2,0,9.2),new V3(0,0,-1),15.4,new V3(1,0,0),'E',[11,14.6]);
+const cordGrip=bx(0.075,0.12,0.07,M('#8d9196',{r:.6}),0,0,0,world);   // GFCI outlet with in-use cover, adapter inside
+
+// --------------------------------------------------------------------
+//  Traffic + wait-time measurement
+// --------------------------------------------------------------------
+const TIM={ns:12,ew:12,y:3,ar:1.5};
+let simT=2,cycStart=0;
+function phaseList(){return[[TIM.ns,'NS','G'],[TIM.y,'NS','Y'],[TIM.ar,'--','R'],[TIM.ew,'EW','G'],[TIM.y,'EW','Y'],[TIM.ar,'--','R']]}
+function phaseAt(t){const L=phaseList(),cyc=L.reduce((a,p)=>a+p[0],0);let u=((t-cycStart)%cyc+cyc)%cyc;
+  for(const p of L){if(u<p[0])return{grp:p[1],col:p[2],left:p[0]-u};u-=p[0]}return{grp:'--',col:'R',left:0}}
+function sigFor(app,ph){const g=(app==='N'||app==='S')?'NS':'EW';return ph.grp===g?ph.col:'R'}
+const LANES=[];
+for(const off of[1.8,5.4]){
+  LANES.push({app:'N',o:new V3(-off,0,-110),d:new V3(0,0,1)},{app:'S',o:new V3(off,0,110),d:new V3(0,0,-1)},
+             {app:'E',o:new V3(110,0,-off),d:new V3(-1,0,0)},{app:'W',o:new V3(-110,0,off),d:new V3(1,0,0)});
+}
+const STOP_S=110-STOP, LOOP=222;
+const carGeo=new RoundedBoxGeometry(1.9,1.3,4.4,2,0.22),carEdges=new THREE.EdgesGeometry(new THREE.BoxGeometry(1.9,1.3,4.4));
+const edgeMat=new THREE.LineBasicMaterial({color:PAL.carEdge,transparent:true,opacity:.55});
+const cars=[],SERVED=[];
+LANES.forEach((ln,li)=>{const n=(ln.app==='N'||ln.app==='S')?3:1;for(let k=0;k<n;k++){
+  const g=new THREE.Group(),mat=M(PAL.car,{r:.85,env:0});mesh(carGeo,mat,0,0.75,0,g);const e=new THREE.LineSegments(carEdges,edgeMat);e.position.y=0.75;g.add(e);
+  g.rotation.y=Math.atan2(ln.d.x,ln.d.z);world.add(g);
+  const s=(k*LOOP/n+li*17)%200;cars.push({g,mat,ln,s,v:9,wait:0,mwait:0,cam:0,seenEver:false,crossed:s+2.2>STOP_S})}});
+const inZone=c=>{const f=c.s+2.2;return f>STOP_S-60&&f<STOP_S+0.3};
+function updateTraffic(dt){
+  simT+=dt;const ph=phaseAt(simT);
+  for(const ln of LANES){
+    const lc=cars.filter(c=>c.ln===ln).sort((a,b)=>b.s-a.s);
+    lc.forEach((c,i)=>{
+      const lead=lc[i-1];let avail=lead?lead.s-c.s-7:1e9;
+      const st=sigFor(ln.app,ph),front=c.s+2.2,toStop=STOP_S-0.6-front;
+      if(toStop>-0.5&&(st==='R'||(st==='Y'&&toStop>9)))avail=Math.min(avail,toStop);
+      const vt=clamp(Math.sqrt(2*3.2*Math.max(0,avail)),0,13);
+      c.v=c.v<vt?Math.min(vt,c.v+2.6*dt):vt;c.s+=c.v*dt;
+      if(inZone(c)&&c.v<1){c.wait+=dt;if(c.cam)c.mwait+=dt}
+      if(!c.crossed&&c.s+2.2>=STOP_S+0.3){c.crossed=true;SERVED.push({t:simT,app:ln.app,wait:c.wait,mwait:c.mwait,seen:c.seenEver})}
+      if(c.s>LOOP){const tail=lc[lc.length-1];if(!tail||tail===c||tail.s>14){c.s=0;c.v=11;c.wait=0;c.mwait=0;c.seenEver=false;c.crossed=false;c.cam=0}}
+      c.g.position.copy(ln.o).addScaledVector(ln.d,c.s);c.g.visible=c.s<220;
+    });
+  }
+  while(SERVED.length&&SERVED[0].t<simT-400)SERVED.shift();
+  return ph;
+}
+// which camera (if any) sees each car in the queue zone; colour the car to match
+function detectCars(){
+  const poss=sensors.map(s=>s.position);
+  for(const c of cars){const p=c.g.position;c.cam=(c.g.visible&&inZone(c))?seen(VPs,poss,P.range,p.x,0.75,p.z):0;if(c.cam)c.seenEver=true;
+    c.mat.color.set(inZone(c)?(c.cam?CAMS[c.cam-1].car:PAL.carN):PAL.car)}
+}
+function headsFor(ph){for(const h of heads){const st=sigFor(h.app,ph);h.lens.forEach((m,i)=>m.emissiveIntensity=(['R','Y','G'][i]===st)?2.4:0.05)}}
+
+// ====================================================================
+//  DEVICE (millimetres, scaled 0.001 into the world)
+//  Frame: X across the box, Y up, Z away from the pole. Origin: pole surface.
+// ====================================================================
+// Design v2: one camera per approach. wall R = +X side wall, L = −X side wall, F = front (lid).
+const CAM_MODEL='ELP outdoor USB camera',CAM_H=77,CAM_V=48;   // all four cameras are the same model
+const CAMS=[
+  {id:'A',app:'S',appName:'South',kind:'bullet',model:CAM_MODEL,port:'USB 3 port (top)',wall:'R',pos:[125,45,40],h:CAM_H,v:CAM_V,col:'#2f80ed',car:'#6ea6f2'},
+  {id:'B',app:'E',appName:'East',kind:'bullet',model:CAM_MODEL,port:'USB 3 port (bottom)',wall:'L',pos:[-125,45,40],h:CAM_H,v:CAM_V,col:'#ee7c1b',car:'#f3a35c'},
+  {id:'C',app:'N',appName:'North',kind:'bullet',model:CAM_MODEL,port:'USB 2 port (top)',wall:'F',pos:[-62,0,100],h:CAM_H,v:CAM_V,col:'#12a594',car:'#5cc8bb'},
+  {id:'D',app:'W',appName:'West',kind:'bullet',model:CAM_MODEL,port:'USB 2 port (bottom)',wall:'F',pos:[62,0,100],h:CAM_H,v:CAM_V,col:'#8b5cf6',car:'#b093f9'},
+];
+const CAMS_V1=[
+  {id:'A',kind:'csi',wall:'R',pos:[125,45,40],h:102,v:67,col:'#2f80ed',appName:'wide'},
+  {id:'B',kind:'csi',wall:'L',pos:[-125,45,40],h:102,v:67,col:'#ee7c1b',appName:'wide'},
+];
+const aspectOf=c=>Math.tan(c.h/2*D2R)/Math.tan(c.v/2*D2R);
+const LENS_TIP={csi:11.5,usb:20,bullet:58},BACK={csi:12,usb:21};
+const BUL={piv:50,up:26};   // outdoor camera: swivel ball 50 mm off the box, housing axis 26 mm above the ball
+function makeChain(cfg){
+  const c={dev:new THREE.Group(),fixed:new THREE.Group(),swivel:new THREE.Group(),tilt:new THREE.Group(),boxG:new THREE.Group()};
+  c.dev.scale.setScalar(0.001);c.dev.add(c.fixed);c.dev.add(c.swivel);c.swivel.add(c.tilt);c.tilt.add(c.boxG);
+  c.pods=cfg.map(cc=>{
+    const mount=new THREE.Group();mount.position.set(...cc.pos);
+    if(cc.wall==='L')mount.scale.x=-1;else if(cc.wall==='F')mount.rotation.y=-Math.PI/2;
+    c.boxG.add(mount);
+    const toeG=new THREE.Group();mount.add(toeG);
+    const bodyG=new THREE.Group();toeG.add(bodyG);
+    const camG=new THREE.Group();bodyG.add(camG);
+    const tip=LENS_TIP[cc.kind];
+    const yo=cc.kind==='bullet'?BUL.up:0;
+    const anchor=new THREE.Object3D();anchor.position.set(tip,yo,0);camG.add(anchor);
+    const fwd=new THREE.Object3D();fwd.position.set(tip+100,yo,0);camG.add(fwd);
+    const up=new THREE.Object3D();up.position.set(tip,yo+100,0);camG.add(up);
+    return{cfg:cc,mount,toeG,bodyG,camG,anchor,fwd,up};
+  });
+  return c;
+}
+// outdoor cameras turn and tilt about their swivel ball. (Design v1's printed pods swing about their
+// front edge for positive toe and about their back edge for negative toe, so the housing never cuts into the wall.)
+function podPose(pd,a){
+  if(pd.cfg.kind==='bullet'){pd.toeG.position.set(BUL.piv,0,0);pd.toeG.rotation.y=-a.toe*D2R;pd.bodyG.position.set(0,0,0);pd.camG.position.set(0,0,0);pd.camG.rotation.set(0,0,-a.pitch*D2R);return}
+  const pr=a.pitch*D2R,top=8+70*Math.tan(pr),bot=8,wp=a.toe>=0?30:-30,bk=BACK[pd.cfg.kind];
+  pd.toeG.position.set(4,0,wp);pd.toeG.rotation.y=-a.toe*D2R;pd.bodyG.position.set(0,0,-wp);
+  pd.camG.position.set((top+bot)/2-bk*Math.cos(pr),bk*Math.sin(pr),0);pd.camG.rotation.set(0,0,-pr);
+}
+function poseChain(c,p){
+  const R=p.poleD/2,f=new V3(-POLE_POS.x,0,-POLE_POS.z).normalize();
+  c.dev.position.set(POLE_POS.x+f.x*R/1000,p.height,POLE_POS.z+f.z*R/1000);
+  c.dev.rotation.set(0,Math.atan2(f.x,f.z),0);
+  c.swivel.position.set(0,0,mountGeom(R).zBar);c.swivel.rotation.set(0,p.swivel*D2R,0);
+  c.tilt.position.set(0,0,0);c.tilt.rotation.set(-p.tilt*D2R,0,0);
+  c.boxG.position.set(0,0,0);
+  c.pods.forEach((pd,i)=>podPose(pd,p.aim[i]));
+  c.dev.updateMatrixWorld(true);
+}
+const R3=makeChain(CAMS);      // the visible model
+const GH=makeChain(CAMS);      // invisible twin used for camera maths (never exploded)
+const GH1=makeChain(CAMS_V1);  // design v1 twin, for the comparison view
+scene.add(R3.dev);
+const _a=new V3(),_f=new V3(),_u=new V3();
+const SENS=CAMS.map(c=>new THREE.PerspectiveCamera(c.v,aspectOf(c),0.25,400));
+const SENS1=CAMS_V1.map(c=>new THREE.PerspectiveCamera(c.v,aspectOf(c),0.25,400));
+const sensors=SENS;
+function sensorFrom(c,i,cam){
+  const pd=c.pods[i];pd.anchor.getWorldPosition(_a);pd.fwd.getWorldPosition(_f);pd.up.getWorldPosition(_u);
+  cam.position.copy(_a);cam.up.copy(_u).sub(_a).normalize();cam.lookAt(_f);cam.updateMatrixWorld();
+  return new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);
+}
+
+// ---------- registry ----------
+const PARTS={};   // id -> object
+const MOV=[];     // objects with explode / mount-guide offsets
+function reg(id,obj,ex){
+  obj.userData.pid=id;PARTS[id]=obj;
+  obj.userData.base=obj.position.clone();obj.userData.ex=ex||new V3();obj.userData.mo=new V3();obj.userData.mk=1;
+  if(!MOV.includes(obj))MOV.push(obj);return obj;
+}
+function tag(id,o){o.userData.pid=id;PARTS[id]=o;return o}
+function regMov(obj,ex){obj.userData.base=obj.position.clone();obj.userData.ex=ex;obj.userData.mo=new V3();obj.userData.mk=1;MOV.push(obj);return obj}
+
+const COL={box:'#dcdeda',lid:'#cdd0cf',alu:'#b8bdc4',steel:'#a7abb0',print:'#3a6ee0',pcb:'#1f7044',hat:'#185a33',black:'#1c1d20',psu:'#c4c8ce',spd:'#e6e8ec',white:'#f3f3ef',gold:'#c9a243'};
+const alu=()=>M(COL.alu,{r:.35,m:.65}),steel=()=>M(COL.steel,{r:.3,m:.85}),blk=()=>M(COL.black,{r:.55});
+
+// ---------- pole mount: bought universal pole-mount kit, two strut channels banded to the pole ----------
+// Every load-carrying part is steel; nothing printed carries load. No joints: each camera aims on its own swivel.
+const KIT_Y=[-108,108];   // strut heights = the two rows of box mounting feet
+function mountGeom(R){return{zS1:12,zBar:24}}   // band line inside the strut, strut front face (the box feet bolt to it)
+const kitG=reg('kit',new THREE.Group());R3.swivel.add(kitG);
+function buildKit(){
+  disposeChildren(kitG);
+  const {zBar}=mountGeom(P.poleD/2),st=steel(),rub=M('#1b1c1e',{r:.95}),sl=M('#26282c',{r:.8});
+  kitG.position.set(0,0,-zBar);   // drawn in pole coordinates; the swivel group sits at the box back
+  for(const y of KIT_Y){
+    bx(70,41,3,rub,0,y,1.5,kitG);                                         // rubber pad against the pole
+    bx(236,41,2.5,st,0,y,4.25,kitG);                                      // strut back
+    for(const s of[-1,1])bx(236,2.5,21,st,0,y+s*19.25,13.5,kitG);          // strut sides
+    for(const s of[-1,1])bx(236,8,2.5,st,0,y+s*15,22.75,kitG);             // inturned lips
+    for(const x of[-100,100])cyl(6,4,st,'z',x,y,zBar+1,kitG,6);           // M8 bolts through the box feet into strut nuts
+    for(const x of[-34,34])bx(14,24,0.6,sl,x,y,5.8,kitG);                 // band slots
+  }
+  bx(14,14,3,st,-80,KIT_Y[1]+26,13.5,kitG);
+  const eye=mesh(new THREE.TorusGeometry(6,1.7,10,24),st,-80,KIT_Y[1]+38,13.5,kitG);eye.rotation.y=Math.PI/2;   // tether eye on the top strut
+  kitG.userData.base=kitG.position.clone();
+}
+regMov(R3.swivel,new V3(0,0,130));regMov(R3.boxG,new V3(0,0,120));
+
+// ---------- band clamps (through the keepers) + safety band ----------
+const bandsG=reg('bands',new THREE.Group());R3.dev.add(bandsG);
+const bandMat=M('#c4c8cc',{r:.25,m:.9,side:THREE.DoubleSide});
+function bandRing(pts,y,parent){const h=hull2(pts),g=new THREE.Group();g.position.y=y;parent.add(g);
+  mesh(ribbonGeo(h.map(([x,z])=>new V3(x,0,z)),19,()=>new V3(0,1,0),true),bandMat,0,0,0,g);return g}
+function buildBands(){
+  disposeChildren(bandsG);const R=P.poleD/2,{zS1}=mountGeom(R),circ=[];
+  for(let i=0;i<96;i++){const a=i/96*Math.PI*2;circ.push([Math.cos(a)*(R+1.2),-R+Math.sin(a)*(R+1.2)])}
+  for(const y of KIT_Y){
+    const g=bandRing([...circ,[-34,zS1-6],[34,zS1-6]],y,bandsG);
+    const ang=-0.5,b=bx(16,24,9,M('#b9bdc1',{r:.3,m:.85}),Math.cos(ang)*(R+5),0,-R+Math.sin(ang)*(R+5),g);b.rotation.y=-ang+Math.PI/2;
+    g.userData.y0=y;
+  }
+}
+// safety band above the box + 3 mm stainless wire rope to the eye on the top strut.
+// The band circles the pole, so even if it slips it cannot leave the pole; the rope then catches the box.
+const tetherG=reg('tether',new THREE.Group());R3.dev.add(tetherG);
+function buildTether(){
+  disposeChildren(tetherG);const R=P.poleD/2,circ=[];
+  for(let i=0;i<96;i++){const a=i/96*Math.PI*2;circ.push([Math.cos(a)*(R+1.2),-R+Math.sin(a)*(R+1.2)])}
+  bandRing(circ,325,tetherG);
+  const st=steel();bx(18,22,6,st,0,325,4,tetherG);const e=mesh(new THREE.TorusGeometry(7,2,10,24),st,0,309,9,tetherG);e.rotation.y=Math.PI/2;
+  const pe=new V3(-80,KIT_Y[1]+38,13.5),p0=new V3(0,303,10);
+  const mid=p0.clone().lerp(pe,0.5).add(new V3(0,-22,14));
+  tube([p0,mid,pe],1.5,M('#9ea3a8',{r:.3,m:.9}),tetherG);
+  for(const q of[p0.clone().lerp(mid,0.18),pe.clone().lerp(mid,0.12)])cyl(2.6,9,st,'y',q.x,q.y,q.z,tetherG,10);   // ferrules
+  tetherG.userData.base=tetherG.position.clone();
+}
+
+// ---------- enclosure ----------
+const B=R3.boxG;
+const bodySolid=reg('box',rbx(250,200,80,6,M(COL.box,{r:.45}),0,0,40,B));
+const bodyShell=new THREE.Group();B.add(bodyShell);bodyShell.userData.pid='box';
+{const m=M(COL.box,{r:.45,side:THREE.DoubleSide});bx(250,200,3.5,m,0,0,1.75,bodyShell);for(const s of[-1,1]){bx(3.5,200,80,m,s*123.25,0,40,bodyShell);bx(243,3.5,80,m,0,s*98.25,40,bodyShell)}
+ const bm=M('#c9cbc7',{r:.5});for(const x of[-97,97])for(const y of[-75,75])cyl(4.5,6,bm,'z',x,y,6.5,bodyShell,16);
+ const hm=M('#2a2c30',{r:.8});for(const s of[-1,1])cyl(20,1,hm,'x',s*121,45,40,bodyShell,32)}
+bx(251,201,1.2,M('#55595e',{r:.6}),0,0,40,bodySolid);
+{const fm=M(COL.box,{r:.45});const feet=new THREE.Group();B.add(feet);feet.userData.pid='box';for(const x of[-100,100])for(const y of[-108,108])bx(20,16,5,fm,x,y,2.5,feet)}
+const lid=reg('lid',new THREE.Group(),new V3(0,0,470));B.add(lid);
+{rbx(250,200,20,6,M(COL.lid,{r:.5}),0,0,90,lid);const sm=steel();for(const x of[-115,115])for(const y of[-90,90])cyl(3.5,1.5,sm,'z',x,y,100.6,lid,16);
+ bx(90,0.6,0.4,M('#9aa0a6'),0,-80,100.3,lid)}
+lid.userData.base=lid.position.clone();
+
+const shield=reg('shield',new THREE.Group(),new V3(0,0,0));B.add(shield);
+{const m=M(COL.white,{r:.55});bx(170,25,1.5,m,0,115.5,0.75,shield);bx(290,1.5,125,m,0,128.75,62.5,shield);bx(290,24,1.5,m,0,117,124.25,shield);
+ for(const s of[-1,1])bx(1.5,17,125,m,s*144.25,120.5,62.5,shield);const st=steel();for(const x of[-80,0,80])cyl(4,3,st,'z',x,112,2.5,shield,6)}
+
+// cable-entry plate on the underside: split grommets let the four camera USB plugs and the 12 V plug pass whole
+const ENTRY={x:20,z:50,w:110,d:40},ENTRY_X=[-20,0,20,40,60];   // grommet x: cameras A–D, then 12 V
+const entry=reg('entry',new THREE.Group(),new V3(0,0,0));entry.position.set(ENTRY.x,-100,ENTRY.z);B.add(entry);entry.userData.base=entry.position.clone();
+{const m=blk(),gm=M('#2a2b2e',{r:.9}),sm=steel();bx(ENTRY.w+16,3,ENTRY.d+10,m,0,-1.5,0,entry);
+ for(const x of[-ENTRY.w/2-3,ENTRY.w/2+3])cyl(2.6,2,sm,'y',x,-4,0,entry,8);
+ ENTRY_X.forEach(x=>cyl(8.5,7,gm,'y',x-ENTRY.x,-6.5,0,entry,20))}
+const vent=reg('vent',new THREE.Group(),new V3(0,0,0));vent.position.set(-85,-100,40);B.add(vent);vent.userData.base=vent.position.clone();
+{const m=M('#3a3c40',{r:.6});cyl(8.5,3,m,'y',0,-1.5,0,vent,6);cyl(7.5,7,m,'y',0,-6.5,0,vent,24);mesh(new THREE.SphereGeometry(7.5,24,12,0,Math.PI*2,0,Math.PI/2),m,0,-10,0,vent).rotation.x=Math.PI}
+
+// ---------- cameras: four identical outdoor USB cameras, each on its own swivel mount screwed to the box ----------
+const camMat={body:M('#eceee9',{r:.45}),shade:M('#f6f6f3',{r:.5,side:THREE.DoubleSide}),lens:M('#0f1012',{r:.2,m:.4}),glass:M('#20344f',{r:.05,m:.5}),mount:M('#e2e4e0',{r:.5}),pin:M(COL.steel,{r:.3,m:.85})};
+R3.pods.forEach(pd=>{
+  const cc=pd.cfg,mt=pd.mount,cg=pd.camG,u=BUL.up;
+  reg('cam'+cc.id,mt,new V3(0,0,cc.wall==='F'?590:0));
+  // swivel mount: Ø60 base on 3 × M4 screws over a gasket, arm out to a locking ball joint
+  cyl(30,6,camMat.mount,'x',3,0,0,mt,32);
+  for(let k=0;k<3;k++){const a=k/3*Math.PI*2;cyl(3,1.5,camMat.pin,'x',6.6,Math.cos(a)*22,Math.sin(a)*22,mt,10)}
+  tube([[6,-6,0],[BUL.piv*0.6,-4,0],[BUL.piv,0,0]],6,camMat.mount,mt);
+  mesh(new THREE.SphereGeometry(9,20,14),camMat.mount,BUL.piv,0,0,mt);
+  // housing (turns and tilts with the aim): Ø42 × 100 mm body, front glass, sun visor
+  cyl(5,u-14,camMat.mount,'y',0,(u-14)/2+2,0,cg,14);
+  cyl(21,100,camMat.body,'x',8,u,0,cg,36);
+  cyl(19,2,camMat.lens,'x',58.5,u,0,cg,36);mesh(new THREE.CircleGeometry(15,32),camMat.glass,59.6,u,0,cg).rotation.y=Math.PI/2;
+  const vis=mesh(new THREE.CylinderGeometry(25,25,104,36,1,true,-Math.PI*0.12,Math.PI*1.24),camMat.shade,14,u,0,cg);vis.rotation.z=Math.PI/2;
+});
+
+// ---------- interior ----------
+const interior=new THREE.Group();B.add(interior);
+const plateG=reg('plate',new THREE.Group(),new V3(0,0,120));interior.add(plateG);
+bx(214,170,4,M('#4a78e3',{r:.65}),0,0,11.5,plateG);
+{const m=M('#2c4f9c',{r:.7});for(let x=-90;x<=90;x+=20)bx(4,8,4.4,m,x,-78,11.5,plateG)}
+const BXC=-35,BYC=45,ZT=25.1;
+const piG=reg('pi5',new THREE.Group(),new V3(0,0,180));interior.add(piG);
+{const pcb=M(COL.pcb,{r:.5}),st=steel(),bk=blk();
+ bx(85,56,1.6,pcb,BXC,BYC,24.3,piG);
+ for(const x of[-74,-16])for(const y of[20.5,69.5])cyl(2.5,10,M('#c9a243',{r:.4,m:.8}),'z',x,y,18.5,piG,6);
+ bx(21,13.1,15.6,st,BXC+36,BYC+10.5,ZT+7.8,piG);bx(21,13.1,15.6,st,BXC+36,BYC-6.5,ZT+7.8,piG);bx(21,14,13.5,st,BXC+36,BYC-20,ZT+6.75,piG);
+ bx(9,7,3.2,st,BXC-29.5,BYC-24.5,ZT+1.6,piG);bx(7,6,3,st,BXC-15,BYC-25,ZT+1.5,piG);bx(7,6,3,st,BXC-1,BYC-25,ZT+1.5,piG);
+ bx(51,5,8.5,bk,BXC-10,BYC+24,ZT+4.25,piG);
+ bx(4,17,2.5,M('#e9e9e4'),BXC+12,BYC-9.5,ZT+1.25,piG);bx(4,17,2.5,M('#e9e9e4'),BXC+18,BYC-9.5,ZT+1.25,piG);
+ bx(4,13,2.5,M('#e9e9e4'),BXC-40.5,BYC+0.5,ZT+1.25,piG);bx(17,17,1.4,M('#9da3a8',{m:.6,r:.3}),BXC-7,BYC+2,ZT+0.7,piG)}
+const sdG=reg('sd',new THREE.Group(),new V3(0,0,150));interior.add(sdG);bx(15,11,0.9,M('#2b3fa8',{r:.4}),BXC-40,BYC,23.0,sdG);
+const coolerG=reg('cooler',new THREE.Group(),new V3(0,0,250));interior.add(coolerG);
+{const hm=M('#8f969d',{r:.35,m:.8});bx(50,40,2,hm,BXC-3,BYC+2,ZT+2.4,coolerG);for(let i=0;i<9;i++)bx(1.2,40,5,hm,BXC-26+i*5.6,BYC+2,ZT+5.9,coolerG);
+ cyl(15,3,blk(),'z',BXC+2,BYC+3,ZT+9.9,coolerG,28)}
+const hatG=reg('hat',new THREE.Group(),new V3(0,0,330));interior.add(hatG);
+{bx(65,56.5,1.6,M(COL.hat,{r:.5}),BXC-10,BYC,ZT+16.8,hatG);bx(16,16,1.4,blk(),BXC-6,BYC+2,ZT+18.3,hatG);
+ bx(51,5,16,blk(),BXC-10,BYC+24,ZT+8,hatG);bx(14,3,1,M('#e9e9e4'),BXC+14,BYC-12,ZT+17.9,hatG);
+ for(const x of[-39,19])for(const y of[-24.5,24.5])cyl(2.6,15.5,M('#c9a243',{r:.4,m:.8}),'z',BXC+x,BYC+y,ZT+8.2,hatG,6)}
+const pcieFlex=flatRibbon([[BXC-41,BYC+0.5,ZT+16.8],[BXC-46,BYC+0.5,ZT+12],[BXC-46,BYC+0.5,ZT+5],[BXC-41.5,BYC+0.5,ZT+2.6]],13,M('#d69a25',{r:.5,side:THREE.DoubleSide}),hatG,new V3(0,1,0));
+// 12 V in: surge module next to the cable entry, then a 12 V → 5 V 5 A USB-C converter for the Pi
+const tvsG=reg('tvs',new THREE.Group(),new V3(0,0,250));interior.add(tvsG);
+{bx(40,24,1.6,M('#1d5fa8',{r:.5}),60,-60,14.3,tvsG);for(const x of[50,58,66,74])bx(6,8,9,M('#2d7d3a',{r:.6}),x,-68,19.6,tvsG);cyl(4,7,M('#2b2d31'),'z',60,-54,18.6,tvsG,14)}
+const dcdcG=reg('dcdc',new THREE.Group(),new V3(0,0,250));interior.add(dcdcG);
+{rbx(64,40,22,3,M('#2b2d31',{r:.5}),0,-55,25,dcdcG);bx(40,14,0.5,M('#9aa0a6'),0,-55,36.3,dcdcG)}
+// LTE router on 12 V, Ethernet to the Pi; its antennas stay inside the plastic box
+const lteG=reg('lte',new THREE.Group(),new V3(0,0,250));interior.add(lteG);
+{rbx(83,74,25,4,M('#e9eaec',{r:.45}),62,40,26,lteG);for(const y of[12,68])cyl(4,40,blk(),'z',96,y,58,lteG,14);
+ tube([[20.5,25,26],[16,25,31],[12,25,31.8]],2,M('#3c6fb4',{r:.5}),lteG)}
+// camera leads run outside the box, down to a drip loop, and up into the cable-entry plate
+const extCab=reg('cables',new THREE.Group());B.add(extCab);
+const wiring=new THREE.Group();B.add(wiring);
+const feedG=reg('feed',new THREE.Group());R3.dev.add(feedG);
+
+// wiring + feed are rebuilt whenever the pose changes
+const wireMats={DCp:M('#d0322a',{r:.5}),DCn:M('#26282c',{r:.5}),coax:M('#4a4f57',{r:.5}),feed:M('#131416',{r:.6}),usb:M('#2b2d31',{r:.5})};
+const USB_PORT=[[11,38.5,37],[11,38.5,29],[11,55.5,37],[11,55.5,29]];   // Pi 5 USB-A ports for cameras A–D
+function buildWiring(){
+  disposeChildren(wiring);disposeChildren(extCab);
+  const W=(pts,m,r=1.3)=>tube(pts,r,m,wiring),um=wireMats.usb,z=ENTRY.z;
+  // outside: from each swivel base down the box to a drip loop, then up into its grommet
+  GH.pods.forEach((pd,i)=>{
+    const cc=pd.cfg,gx=ENTRY_X[i];let pts;
+    if(cc.wall==='F'){const x=cc.pos[0];pts=[[x,-28,104],[x,-80,106],[x*0.9,-112,100],[x*0.5+gx*0.5,-134,74],[gx,-142,z+6],[gx,-126,z],[gx,-108,z]]}
+    else{const sx=Math.sign(cc.pos[0]),x=cc.pos[0]+sx*4;pts=[[x,22,40],[x+sx*3,-50,42],[x,-104,44],[x*0.6+gx*0.4,-140,48],[gx,-144,z],[gx,-126,z],[gx,-108,z]]}
+    tube(pts,2.4,um,extCab);
+  });
+  // inside: grommets up over the converter to the Pi's four USB ports
+  USB_PORT.forEach((p,i)=>{const gx=ENTRY_X[i];W([[gx,-96,z],[gx,-82,58],[26+i*4,-24,60],[32,p[1],p[2]+10],[22,p[1],p[2]],[p[0]+3,p[1],p[2]]],um,2.4);bx(10,12,7,um,p[0]+5,p[1],p[2],wiring)});
+  // 12 V: grommet → surge module → converter → USB-C into the Pi
+  const gx=ENTRY_X[4];
+  W([[gx-1.5,-96,z],[gx-1.5,-86,40],[gx-1,-76,22],[gx-1,-70,21]],wireMats.DCp,1.4);
+  W([[gx+1.5,-96,z],[gx+1.5,-86,40],[gx+7,-76,22],[gx+7,-70,21]],wireMats.DCn,1.4);
+  W([[44,-58,19],[38,-58,24],[32,-58,25]],wireMats.DCp,1.4);W([[44,-62,19],[38,-62,24],[32,-62,25]],wireMats.DCn,1.4);
+  W([[-32,-48,28],[-48,-30,32],[BXC-29.5,BYC-44,ZT+4],[BXC-29.5,BYC-31,ZT+1.6]],um,1.8);
+  W([[70,-48,20],[74,-20,24],[74,0,24],[74,3,22]],wireMats.DCp,1.3);W([[66,-48,20],[70,-20,23],[70,0,23],[70,3,21]],wireMats.DCn,1.3);   // 12 V to the router
+}
+function buildFeed(){
+  disposeChildren(feedG);
+  const gl=GH.boxG.localToWorld(new V3(ENTRY_X[4],-126,ENTRY.z)),loc=GH.dev.worldToLocal(gl.clone());
+  const R=P.poleD/2,sx=-50,sz=-R+Math.sqrt(R*R-sx*sx);
+  // 12 V cord from the plug-in adapter under the outlet's in-use cover, down to a drip loop, up into the box
+  tube([[sx,-515,sz+20],[sx-10,-570,sz+45],[loc.x-30,-610,loc.z-40],[loc.x-10,-560,loc.z],[loc.x,-320,loc.z],[loc.x,loc.y,loc.z]],2.6,wireMats.feed,feedG);
+  feedG.userData.base=feedG.position.clone();
+}
+
+// ---------- frustum visuals ----------
+const frustG=new THREE.Group();scene.add(frustG);
+const frust=CAMS.map(cc=>{
+  const c=new THREE.Color(cc.col);
+  const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(16*3),3));
+  const lines=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.9}));
+  const fg=new THREE.BufferGeometry();fg.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(12*3),3));
+  const faces=new THREE.Mesh(fg,new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false}));
+  frustG.add(lines,faces);return{lines,faces};
+});
+let VPs=[],VP1=[];
+function updateSensors(){
+  poseChain(GH,P);
+  VPs=CAMS.map((_,i)=>sensorFrom(GH,i,SENS[i]));
+  VPs.forEach((m,i)=>covU.uVP.value[i].copy(m));SENS.forEach((c,i)=>covU.uP.value[i].copy(c.position));covU.uRange.value=P.range;
+}
+function updateV1(){poseChain(GH1,P1);VP1=CAMS_V1.map((_,i)=>sensorFrom(GH1,i,SENS1[i]))}
+function updateFrustums(){
+  const full=S.view==='installed'||(S.view==='mounting'&&(S.step===0||S.step===CHECK_STEP));
+  SENS.forEach((cam,i)=>{
+    const o=cam.position,ends=[];
+    for(const [x,y] of[[-1,-1],[1,-1],[1,1],[-1,1]]){
+      const p=new V3(x,y,0.5).unproject(cam),d=p.sub(o).normalize();let L;
+      if(full){L=d.y<-1e-3?Math.min(-o.y/d.y,P.range):14}else L=0.7;
+      ends.push(o.clone().addScaledVector(d,L));
+    }
+    const lp=frust[i].lines.geometry.attributes.position,fp=frust[i].faces.geometry.attributes.position;let k=0;
+    const put=(a,v)=>{a.setXYZ(k++,v.x,v.y,v.z)};
+    for(let j=0;j<4;j++){put(lp,o);put(lp,ends[j])}for(let j=0;j<4;j++){put(lp,ends[j]);put(lp,ends[(j+1)%4])}
+    k=0;for(let j=0;j<4;j++){put(fp,o);put(fp,ends[j]);put(fp,ends[(j+1)%4])}
+    lp.needsUpdate=true;fp.needsUpdate=true;frust[i].lines.geometry.computeBoundingSphere();frust[i].faces.geometry.computeBoundingSphere();
+  });
+}
+
+// ====================================================================
+//  COVERAGE MATHS
+// ====================================================================
+const ZONES={N:{x0:-ROAD,x1:0,z0:-STOP-60,z1:-STOP,d:(x,z)=>-STOP-z},S:{x0:0,x1:ROAD,z0:STOP,z1:STOP+60,d:(x,z)=>z-STOP},
+  E:{x0:STOP,x1:STOP+60,z0:-ROAD,z1:0,d:(x,z)=>x-STOP},W:{x0:-STOP-60,x1:-STOP,z0:0,z1:ROAD,d:(x,z)=>-STOP-x},X:{x0:-STOP,x1:STOP,z0:-STOP,z1:STOP,d:()=>0}};
+function zoneSamples(step){const out={};for(const [k,z] of Object.entries(ZONES)){const a=[];for(let x=z.x0+step/2;x<z.x1;x+=step)for(let q=z.z0+step/2;q<z.z1;q+=step)a.push([x,q,z.d(x,q)]);out[k]=a}return out}
+const SAMP=zoneSamples(0.6),SAMP_FAST=zoneSamples(1.6),SAMP_MID=zoneSamples(1.0);
+function visE(e,px,py,pz){const w=e[3]*px+e[7]*py+e[11]*pz+e[15];if(w<=0)return false;const x=(e[0]*px+e[4]*py+e[8]*pz+e[12])/w;if(x<-1||x>1)return false;const y=(e[1]*px+e[5]*py+e[9]*pz+e[13])/w;return y>=-1&&y<=1}
+function seen(vps,poss,range,x,y,z){for(let i=0;i<vps.length;i++){const p=poss[i];if((x-p.x)**2+(z-p.z)**2>range*range)continue;if(visE(vps[i].elements,x,y,z))return i+1}return 0}
+function coverage(vps,poss,range,samp){
+  const r={};for(const [k,a] of Object.entries(samp)){let n=0,nn=0,t=0,tn=0;for(const [x,z,d] of a){const s=seen(vps,poss,range,x,0.5,z)?1:0;t++;n+=s;if(d<=30){tn++;nn+=s}}r[k]={all:n/t,near:tn?nn/tn:1}}return r;
+}
+function camCoverage(vp,pos,range,samp){let n=0,nn=0,t=0,tn=0;for(const [x,z,d] of samp){const s=((x-pos.x)**2+(z-pos.z)**2<=range*range&&visE(vp.elements,x,0.5,z))?1:0;t++;n+=s;if(d<=30){tn++;nn+=s}}return{all:n/t,near:tn?nn/tn:1}}
+let COV=null,COV1=null;
+function updateCoverage(){COV=coverage(VPs,SENS.map(s=>s.position),P.range,SAMP);renderCovResults();drawCoverage()}
+// queue centre-lines: middle of the inbound lanes, from the stop line out to 60 m
+const CLINE={N:[],S:[],E:[],W:[]};
+for(let k=0;k<=12;k++){CLINE.N.push([-ROAD/2,-STOP-k*5]);CLINE.S.push([ROAD/2,STOP+k*5]);CLINE.E.push([STOP+k*5,-ROAD/2]);CLINE.W.push([-STOP-k*5,ROAD/2])}
+// 1 = queue runs straight up the middle of the picture, 0 = queue sits at the edge or out of view
+function centreScore(vp,app){const e=vp.elements;let s=0;for(const [x,z] of CLINE[app]){const w=e[3]*x+e[7]*0.5+e[11]*z+e[15];s+=w<=0?1:Math.min(1,Math.abs((e[0]*x+e[4]*0.5+e[8]*z+e[12])/w))}return 1-s/CLINE[app].length}
+// aim each camera at its own approach. Coverage comes first (stop-bar queue weighted 3×). Among aims
+// within 1.5% of the best coverage, take the one that puts the queue closest to the middle of the picture,
+// which leaves margin for aiming error and pole sway.
+const SKY_MAX=8;
+function optimize(){
+  CAMS.forEach((cc,i)=>{
+    const cam=new THREE.PerspectiveCamera(cc.v,aspectOf(cc),0.25,400);
+    const evalAim=(toe,pitch,samp)=>{const p={...P,aim:P.aim.map((a,j)=>j===i?{toe,pitch}:a)};poseChain(GH,p);const vp=sensorFrom(GH,i,cam);
+      const c=camCoverage(vp,cam.position,P.range,samp[cc.app]);return{cov:3*c.near+c.all,ctr:centreScore(vp,cc.app),toe,pitch}};
+    const pick=list=>{const top=Math.max(...list.map(r=>r.cov));return list.filter(r=>r.cov>=top-0.04).sort((a,b)=>b.ctr-a.ctr||Math.abs(a.toe)-Math.abs(b.toe))[0]};
+    // tilt floor: the top of the picture stays at most 8° above the horizon (less sky, less sun in the lens)
+    const minP=Math.ceil(cc.v/2-SKY_MAX);
+    const coarse=[];for(let toe=-45;toe<=45;toe+=5)for(let pitch=minP;pitch<=40;pitch+=4)coarse.push(evalAim(toe,pitch,SAMP_FAST));
+    // refine around both the best-centred and the best-covering coarse aims, then judge them all together
+    const seeds=[pick(coarse),coarse.reduce((m,r)=>r.cov>m.cov?r:m)],fine=[],seenKey=new Set();
+    for(const sd of seeds)for(let toe=sd.toe-5;toe<=sd.toe+5;toe++)for(let pitch=sd.pitch-4;pitch<=sd.pitch+4;pitch++){
+      const k=toe+','+pitch;if(pitch<minP||pitch>40||Math.abs(toe)>45||seenKey.has(k))continue;seenKey.add(k);fine.push(evalAim(toe,pitch,SAMP_MID))}
+    const b=pick(fine);P.aim[i]={toe:b.toe,pitch:b.pitch};
+  });
+}
+
+// ====================================================================
+//  POSE UPDATES
+// ====================================================================
+function setBaseChain(){for(const o of[R3.swivel,R3.tilt,R3.boxG])o.userData.base=o.position.clone()}
+function onParams(k){
+  if(k==='poleD'||k==='all'){buildKit();buildBands()}
+  // the pole tapers (top radius 0.86 × base); size it so its diameter at mount height is exactly poleD
+  {const r=P.poleD/2000/(1-0.14*P.height/7.4);devPole.shaft.scale.set(r,1,r)}
+  poseChain(R3,P);setBaseChain();updateSensors();buildWiring();buildFeed();buildTether();updateFrustums();updateCoverage();syncSliders();applyVisibility();
+  const R=P.poleD/2000,f=new V3(-POLE_POS.x,0,-POLE_POS.z).normalize(),side=new V3(f.z,0,-f.x);
+  cordGrip.position.copy(POLE_POS).addScaledVector(f,R*0.9).addScaledVector(side,0.05);cordGrip.position.y=P.height-0.45;cordGrip.lookAt(cordGrip.position.clone().add(f));
+}
+
+// ====================================================================
+//  VIEWS, VISIBILITY, CAMERA MOVES
+// ====================================================================
+const VIEWS={
+  installed:{label:'Installed at intersection',ic:'M2 13h12M4 13V6l4-3 4 3v7'},
+  mounting:{label:'How it mounts',ic:'M5 2v12M5 5h7v6H5'},
+  exterior:{label:'Exterior',ic:'M3 4h10v8H3zM3 4l2-2h10l-2 2'},
+  interior:{label:'Interior',ic:'M3 3h10v10H3zM6 6h4v4H6z'},
+  exploded:{label:'Exploded',ic:'M8 2v3M8 11v3M2 8h3M11 8h3M6 6h4v4H6z'},
+};
+function presetFor(v){
+  const L=(p,t)=>({pos:R3.dev.localToWorld(new V3(...p)),tgt:R3.dev.localToWorld(new V3(...t))});
+  if(v==='installed')return{pos:new V3(30,23,37),tgt:new V3(-1,0,-1)};
+  if(v==='mounting')return S.step===0?L([11500,-2700,900],[0,-2700,300]):S.step===CHECK_STEP?{pos:new V3(30,23,37),tgt:new V3(-1,0,-1)}:L([470,230,600],[0,-10,100]);
+  if(v==='exterior')return L([640,250,1060],[0,-10,170]);
+  if(v==='interior')return L([150,110,620],[-15,0,150]);
+  return L([1700,370,880],[0,-30,530]);
+}
+let tween=null;
+function flyTo(pos,tgt,dur=950){tween={p0:camera.position.clone(),t0:controls.target.clone(),p1:pos,t1:tgt,s:performance.now(),d:reduceMotion?1:dur}}
+function setView(v,fly=true){
+  S.view=v;$$('#viewSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
+  $$('.side-item[data-view]').forEach(b=>b.setAttribute('aria-current',b.dataset.view===v));
+  S.eT=v==='exploded'?1:0;
+  if(v==='mounting')setStep(S.step,false);
+  applyVisibility();updateFrustums();
+  if(fly){const p=presetFor(v);flyTo(p.pos,p.tgt)}
+  $('#mountCard').hidden=v!=='mounting';
+  $('#stageHint').hidden=v==='mounting'||isSmall();
+}
+function applyVisibility(){
+  const v=S.view,inside=v==='interior'||v==='exploded';
+  interior.visible=inside;lid.visible=v!=='interior';shield.visible=v!=='interior';extCab.visible=v!=='exploded';
+  bodySolid.visible=!inside;bodyShell.visible=inside;
+  wiring.visible=v==='interior'&&S.wiring;
+  feedG.visible=S.wiring&&(v==='installed'||v==='mounting'||v==='exterior');
+  frustG.visible=S.cones&&(v==='installed'||v==='exterior'||v==='mounting');
+  covU.uShow.value=S.cones&&!inside?1:0;
+  for(const o of[kitG,bandsG,R3.boxG])o.visible=true;
+  R3.pods.forEach(pd=>{if(pd.cfg.wall==='F')pd.mount.visible=v!=='interior'});   // cameras C and D come off with the lid
+  tetherG.visible=v==='installed'||v==='exterior'||v==='mounting';
+  if(v==='mounting'){
+    const st=S.step,show=(o,n)=>o.visible=st===0||st>=n;
+    show(tetherG,1);show(kitG,2);show(R3.boxG,2);show(bandsG,3);
+    shield.visible=st===0||st>=5;feedG.visible=st===0||st>=6;lid.visible=true;
+    frustG.visible=S.cones&&(st===0||st===CHECK_STEP);
+  }
+}
+function toggle(k){S[k]=!S[k];$$(`[data-tog="${k}"]`).forEach(b=>b.setAttribute('aria-pressed',S[k]));applyVisibility();updateFrustums()}
+$$('#viewSeg button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+$$('[data-tog]').forEach(b=>b.addEventListener('click',()=>toggle(b.dataset.tog)));
+addEventListener('keydown',e=>{
+  if(curPage!=='model'||e.target.closest('input,textarea')||e.metaKey||e.ctrlKey||e.altKey)return;
+  const vs=Object.keys(VIEWS),n=+e.key;
+  if(n>=1&&n<=5)setView(vs[n-1]);
+  const t={l:'labels',c:'cones',w:'wiring',d:'dims'}[e.key.toLowerCase()];if(t)toggle(t);
+  if(e.key==='Escape')select(null);
+  if(S.view==='mounting'&&(e.key==='ArrowRight'||e.key==='ArrowLeft'))setStep(clamp(S.step+(e.key==='ArrowRight'?1:-1),0,MOUNT_STEPS.length-1));
+});
+
+// ---------- mounting guide ----------
+function animFrom(o,off){o.userData.mo=off;o.userData.mk=0}
+function setStep(n,animate=true){
+  S.step=n;const st=MOUNT_STEPS[n];
+  $('#mcStep').textContent=n===0?'Overview':`Step ${n} of ${MOUNT_STEPS.length-1}`;$('#mcTitle').textContent=st.t;$('#mcText').textContent=st.d;
+  $('#mcDots').innerHTML=MOUNT_STEPS.map((_,i)=>`<i class="${i===n?'on':''}"></i>`).join('');
+  $('#mcPrev').disabled=n===0;$('#mcNext').textContent=n===MOUNT_STEPS.length-1?'Start over':'Next step';
+  applyVisibility();updateFrustums();
+  if(animate&&!reduceMotion){
+    if(n===1)animFrom(tetherG,new V3(0,0,200));
+    if(n===2)animFrom(R3.swivel,new V3(0,0,360));
+    if(n===3)bandsG.userData.bandK=0;
+    if(n===5)animFrom(shield,new V3(0,160,0));
+  }
+  if(n===6)select('feed',false);else if(S.sel==='feed')select(null);
+  if(S.view==='mounting'){const p=presetFor('mounting');flyTo(p.pos,p.tgt,800)}
+}
+$('#mcNext').addEventListener('click',()=>setStep((S.step+1)%MOUNT_STEPS.length));
+$('#mcPrev').addEventListener('click',()=>setStep(Math.max(0,S.step-1)));
+$('#mcReplay').addEventListener('click',()=>setStep(S.step));
+
+// ====================================================================
+//  SIDEBAR, SELECTION, INSPECTOR
+// ====================================================================
+const bomById=Object.fromEntries(BOM.map(b=>[b.id,b]));
+function buildSidebar(){
+  let h='<div class="side-h">VIEWS</div>';
+  for(const [k,v] of Object.entries(VIEWS))h+=`<button class="side-item" data-view="${k}" aria-current="${k===S.view}"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="${v.ic}"/></svg><span class="nm">${v.label}</span></button>`;
+  const groups=[...new Set(PART3D.map(p=>p.grp))];
+  for(const g of groups){h+=`<div class="side-h">${g.toUpperCase()}</div>`;
+    for(const p of PART3D.filter(q=>q.grp===g)){const b=bomById[p.bom];h+=`<button class="side-item" data-part="${p.id}" title="${esc(p.dims)}"><span class="dot" style="background:var(${b.type==='print'?'--print':'--buy'})"></span><span class="nm">${esc(p.name)}</span></button>`}}
+  h+=`<div class="side-h">KEY</div><div style="font-size:11.5px;color:var(--fg-2);padding:0 8px;display:grid;gap:3px"><span><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--buy)"></span> Buy</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--print)"></span> 3D print</span></div>`;
+  $('#vSide').innerHTML=h;
+  $$('#vSide [data-view]').forEach(b=>b.addEventListener('click',()=>{setView(b.dataset.view);if(isSmall())$('#viewerBody').classList.remove('side-open')}));
+  $$('#vSide [data-part]').forEach(b=>b.addEventListener('click',()=>{select(b.dataset.part);if(isSmall())$('#viewerBody').classList.remove('side-open')}));
+}
+$('#sideBtn').addEventListener('click',()=>{
+  if(isSmall())$('#viewerBody').classList.toggle('side-open');else{const s=$('#vSide');s.hidden=!s.hidden}
+});
+const hiMats=new Map();
+function setHighlight(id){
+  for(const [m,e] of hiMats){m.emissive.copy(e.c);m.emissiveIntensity=e.i}hiMats.clear();
+  const o=PARTS[id];if(!o)return;
+  o.traverse(n=>{if(n.isMesh&&n.material&&n.material.emissive&&!hiMats.has(n.material)){hiMats.set(n.material,{c:n.material.emissive.clone(),i:n.material.emissiveIntensity});n.material.emissive.set(isDark()?'#3d8cff':'#0a66d6');n.material.emissiveIntensity=0.45}});
+}
+function partCenter(id){const o=PARTS[id];if(!o)return null;const b=new THREE.Box3().setFromObject(o);if(b.isEmpty())return null;return{c:b.getCenter(new V3()),s:b.getSize(new V3()).length()}}
+function select(id,fly=true){
+  S.sel=id;setHighlight(id);
+  $$('#vSide [data-part]').forEach(b=>b.setAttribute('aria-current',b.dataset.part===id));
+  renderInspector();
+  if(!id||!fly)return;
+  const p=PART3D.find(q=>q.id===id);if(!p)return;
+  const inView=(VIEW_LABELS[S.view]||[]).includes(id)||(S.view==='exploded');
+  if(!inView)setView(p.home,false);
+  if(S.view==='mounting'&&S.step!==0)setStep(0,false);
+  const pre=presetFor(S.view);R3.dev.updateMatrixWorld(true);
+  const pc=partCenter(id);if(!pc)return;
+  const dir=pre.pos.clone().sub(pre.tgt).normalize(),dist=clamp(pc.s*3.2,0.22,1.3);
+  flyTo(pc.c.clone().addScaledVector(dir,dist),pc.c,800);
+}
+function renderInspector(){
+  const el=$('#insp'),id=S.sel,p=PART3D.find(q=>q.id===id);
+  if(!p){el.classList.add('empty');el.innerHTML=`<div class="insp-empty"><b style="color:var(--fg-2)">Nothing selected</b><br>Click a part in the model or the sidebar to see its size, cost and where it goes.</div>`;return}
+  el.classList.remove('empty');const b=bomById[p.bom];
+  const cost=b.type==='print'?'Filament only':`$${b.cost*b.qty}${b.qty>1?` <span style="color:var(--fg-3)">(${b.qty} × $${b.cost})</span>`:''}`;
+  el.innerHTML=`<button class="tbtn insp-close" aria-label="Close inspector">Close</button>
+  <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip ${b.type}">${b.type==='print'?'3D print':'Buy'}</span>${b.opt?'<span class="chip opt">Optional</span>':''}<span class="chip opt">${esc(p.grp)}</span></div>
+  <h3>${esc(p.name)}</h3>
+  <dl class="kv"><dt>Size</dt><dd style="font-family:var(--mono);font-size:11.5px">${esc(p.dims)}</dd><dt>Qty</dt><dd>${b.qty}</dd><dt>Est. cost</dt><dd>${cost}</dd><dt>Line item</dt><dd>${esc(b.name)}</dd></dl>${buyLinks(b)}
+  <p><b style="color:var(--fg)">Where it goes.</b> ${esc(p.where)}</p><p>${esc(p.note)}</p>
+  <p style="font-size:11.5px;color:var(--fg-3);border-top:1px solid var(--line);padding-top:8px">${esc(b.spec)}</p>`;
+  $('.insp-close',el).addEventListener('click',()=>select(null));
+}
+
+// click-to-select in the 3D view
+const ray=new THREE.Raycaster();let downAt=null;
+glc.addEventListener('pointerdown',e=>{downAt=[e.clientX,e.clientY]});
+glc.addEventListener('pointerup',e=>{
+  if(!downAt||Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>5)return;
+  const r=glc.getBoundingClientRect();ray.setFromCamera(new V2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);
+  const hits=ray.intersectObject(R3.dev,true).filter(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent}return true});
+  for(const h of hits){let o=h.object;while(o&&!o.userData.pid)o=o.parent;if(o){const id=o.userData.pid;if(PART3D.find(p=>p.id===id)){select(id,false);return}}}
+  select(null);
+});
+
+// ====================================================================
+//  LABELS + DIMENSIONS OVERLAY
+// ====================================================================
+const labelsEl=$('#labels'),svg=$('#callouts');const LBL={};
+const SPECIAL={unit:{name:'Monitor unit',dims:()=>`${P.height.toFixed(1)} m up · 250 × 200 × 100 mm`},poleL:{name:'Corner signal pole',dims:()=>`Ø${P.poleD} mm`},
+};
+CAMS.forEach(cc=>{SPECIAL['cam'+cc.id+'c']={name:`Camera ${cc.id} · ${cc.appName}`,dims:()=>`${cc.model} · ${cc.h}° × ${cc.v}°`}});
+function lblEl(id){
+  if(LBL[id])return LBL[id];const d=document.createElement('div');d.className='lbl';
+  const p=PART3D.find(q=>q.id===id),sp=SPECIAL[id];
+  d.innerHTML=`<b>${esc(p?p.name:sp.name)}</b><span>${esc(p?p.dims:sp.dims())}</span>`;
+  d.addEventListener('click',()=>{if(p)select(id,false);else if(id==='unit')setView('exterior')});
+  labelsEl.appendChild(d);LBL[id]={el:d,w:0,h:0};return LBL[id];
+}
+function anchorOf(id){
+  if(id==='unit')return R3.boxG.localToWorld(new V3(0,0,50));
+  if(id==='poleL')return POLE_POS.clone().setY(2.6);
+  const cm=/^cam([A-D])c$/.exec(id);if(cm){const c=SENS['ABCD'.indexOf(cm[1])];const d=new V3(0,0,-1).applyQuaternion(c.quaternion);return c.position.clone().addScaledVector(d,14)}
+  const pc=partCenter(id);return pc?pc.c:null;
+}
+const _p=new V3();
+function toScreen(v,W,H){_p.copy(v).project(camera);return{x:(_p.x+1)/2*W,y:(1-_p.y)/2*H,ok:_p.z<1&&_p.z>-1}}
+function dimsFor(v){
+  const B_=(x,y,z)=>R3.boxG.localToWorld(new V3(x,y,z)),Dv=(x,y,z)=>R3.dev.localToWorld(new V3(x,y,z)),R=P.poleD/2,G=mountGeom(R);
+  if(v==='exterior')return[
+    {a:B_(-125,-150,100),b:B_(125,-150,100),ea:B_(-125,-100,100),eb:B_(125,-100,100),t:'250'},
+    {a:B_(-200,-100,100),b:B_(-200,100,100),ea:B_(-125,-100,100),eb:B_(-125,100,100),t:'200'},
+    {a:B_(125,-150,0),b:B_(125,-150,100),ea:B_(125,-100,0),eb:B_(125,-100,100),t:'100'},
+    {a:Dv(-R,-330,-R),b:Dv(R,-330,-R),t:'Ø'+P.poleD}];
+  if(v==='mounting')return[
+    {a:Dv(-150,KIT_Y[0],G.zS1),b:Dv(-150,KIT_Y[1],G.zS1),ea:Dv(-30,KIT_Y[0],G.zS1),eb:Dv(-30,KIT_Y[1],G.zS1),t:String(KIT_Y[1]-KIT_Y[0])},
+    {a:Dv(0,-230,0),b:Dv(0,-230,G.zBar+120),t:String(Math.round(G.zBar+120))},
+    {a:Dv(-R,-420,-R),b:Dv(R,-420,-R),t:'Ø'+P.poleD}];
+  if(v==='interior')return[
+    {a:B_(-107,-95,13.5),b:B_(107,-95,13.5),t:'214'},
+    {a:B_(-118,-85,13.5),b:B_(-118,85,13.5),t:'170'}];
+  if(v==='installed'||v==='mounting0')return heightDim();
+  return[];
+}
+// mounting height: ground to box centre, drawn just in front of the box
+function heightDim(){
+  const c=R3.boxG.localToWorld(new V3(0,0,50)),f=R3.dev.localToWorld(new V3(0,0,1000)).sub(R3.dev.localToWorld(new V3(0,0,0))).setY(0).normalize();
+  const top=c.clone().addScaledVector(f,0.6),bot=top.clone().setY(0);
+  return[{a:bot,b:top,ea:bot,eb:c,t:`${P.height.toFixed(1)} m to box centre`}];
+}
+const dimPool=[];
+function layoutOverlay(W,H){
+  // the camera-check step is shown like the installed view, so it gets the camera labels
+  const lv=S.view==='mounting'&&S.step===CHECK_STEP?'installed':S.view;
+  let svgH='';const ids=S.labels?[...(VIEW_LABELS[lv]||[])]:[];
+  if(S.view==='mounting'&&S.step!==0){const vis=id=>{const o=PARTS[id];if(!o)return true;let q=o;while(q){if(!q.visible)return false;q=q.parent}return true};for(let i=ids.length-1;i>=0;i--)if(!vis(ids[i]))ids.splice(i,1)}
+  if(S.sel&&!ids.includes(S.sel)&&S.view!=='installed')ids.push(S.sel);
+  for(const k in LBL)LBL[k].el.hidden=!ids.includes(k);
+  const compact=W<620||S.view==='exploded';const items=[];
+  for(const id of ids){const a=anchorOf(id);if(!a)continue;const s=toScreen(a,W,H);const L=lblEl(id);L.el.hidden=!s.ok;if(!s.ok)continue;
+    L.el.classList.toggle('compact',compact);L.el.classList.toggle('sel',id===S.sel);if(!L.w||L.c!==compact){L.w=L.el.offsetWidth;L.h=L.el.offsetHeight;L.c=compact}items.push({id,s,L})}
+  if(S.view==='installed'){
+    for(const it of items){const x=clamp(it.s.x+18,4,W-it.L.w-4),y=clamp(it.s.y-it.L.h-14,4,H-it.L.h-4);it.L.el.style.left=x+'px';it.L.el.style.top=y+'px';
+      svgH+=`<path d="M${it.s.x} ${it.s.y}L${x+6} ${y+it.L.h}" stroke="var(--fg-2)" stroke-width="1" fill="none" opacity=".8"/><circle cx="${it.s.x}" cy="${it.s.y}" r="2.5" fill="var(--fg)"/>`}
+  }else if(items.length){
+    const bb=new THREE.Box3().setFromObject(S.view==='mounting'?R3.dev:R3.boxG);let mnx=1e9,mxx=-1e9;
+    for(let i=0;i<8;i++){const v=new V3(i&1?bb.max.x:bb.min.x,i&2?bb.max.y:bb.min.y,i&4?bb.max.z:bb.min.z);const s=toScreen(v,W,H);mnx=Math.min(mnx,s.x);mxx=Math.max(mxx,s.x)}
+    const cx=(mnx+mxx)/2,gap=compact?3:5;
+    for(const side of[-1,1]){
+      const col=items.filter(it=>side<0?it.s.x<cx:it.s.x>=cx).sort((a,b)=>a.s.y-b.s.y);if(!col.length)continue;
+      const mw=Math.max(...col.map(c=>c.L.w));
+      let xEdge=side<0?clamp(mnx-26,mw+8,W/2):clamp(mxx+26,W/2,W-mw-8);
+      let y=6;const ys=[];for(const it of col){y=Math.max(it.s.y-it.L.h/2,y);ys.push(y);y+=it.L.h+gap}
+      const over=y-gap-(H-6);if(over>0){for(let i=ys.length-1,lim=H-6;i>=0;i--){const top=Math.min(ys[i]-over,lim-col[i].L.h);ys[i]=Math.max(6,top);lim=ys[i]-gap}}
+      col.forEach((it,i)=>{const lx=side<0?xEdge-it.L.w:xEdge,ly=ys[i];it.L.el.style.left=lx+'px';it.L.el.style.top=ly+'px';
+        const ex=side<0?xEdge+2:xEdge-2,ey=ly+it.L.h/2,sel=it.id===S.sel;
+        svgH+=`<path d="M${it.s.x.toFixed(1)} ${it.s.y.toFixed(1)}L${(ex-side*12).toFixed(1)} ${ey.toFixed(1)}L${ex} ${ey.toFixed(1)}" stroke="${sel?'var(--accent)':'var(--fg-2)'}" stroke-width="${sel?1.6:1}" fill="none" opacity=".85"/><circle cx="${it.s.x.toFixed(1)}" cy="${it.s.y.toFixed(1)}" r="2.6" fill="${sel?'var(--accent)':'var(--fg)'}" stroke="var(--chip)" stroke-width="1"/>`});
+    }
+  }
+  // dimensions
+  let di=0;
+  const dl=S.dims?dimsFor(S.view):[];
+  if(!S.dims&&(S.view==='installed'||(S.view==='mounting'&&S.step===0)))dl.push(...heightDim());
+  if(S.dims&&S.view==='mounting'&&S.step===0)dl.push(...heightDim());
+  {for(const d of dl){
+    const a=toScreen(d.a,W,H),b=toScreen(d.b,W,H);if(!a.ok||!b.ok)continue;
+    const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,nx=-dy/l*5,ny=dx/l*5;
+    if(d.ea){const ea=toScreen(d.ea,W,H),eb=toScreen(d.eb,W,H);svgH+=`<path d="M${ea.x} ${ea.y}L${a.x} ${a.y}M${eb.x} ${eb.y}L${b.x} ${b.y}" stroke="var(--fg-2)" stroke-width=".8" stroke-dasharray="3 3" fill="none"/>`}
+    svgH+=`<path d="M${a.x} ${a.y}L${b.x} ${b.y}M${a.x-nx} ${a.y-ny}L${a.x+nx} ${a.y+ny}M${b.x-nx} ${b.y-ny}L${b.x+nx} ${b.y+ny}" stroke="var(--fg)" stroke-width="1.2" fill="none"/>`;
+    let t=dimPool[di];if(!t){t=document.createElement('div');t.className='dimtxt';labelsEl.appendChild(t);dimPool.push(t)}
+    t.hidden=false;t.textContent=d.t;t.style.left=((a.x+b.x)/2)+'px';t.style.top=((a.y+b.y)/2)+'px';di++}}
+  for(;di<dimPool.length;di++)dimPool[di].hidden=true;
+  svg.innerHTML=svgH;
+}
+
+// ---------- zoom: wheel/pinch anywhere on the stage, plus +/− buttons ----------
+// labels and pills sit on top of the canvas; pass their wheel events through so zoom still works over them
+stage.addEventListener('wheel',e=>{
+  if(e.target===glc||e.target.closest('.inspector,.mount-card,.zoombar'))return;
+  e.preventDefault();glc.dispatchEvent(new WheelEvent('wheel',e));
+},{passive:false});
+function zoomBy(f){
+  const t=tween?tween.t1:controls.target,from=tween?tween.p1:camera.position;
+  const off=from.clone().sub(t),len=clamp(off.length()*f,controls.minDistance,controls.maxDistance);
+  flyTo(t.clone().add(off.setLength(len)),t.clone(),260);
+}
+$('#zoomIn').addEventListener('click',()=>zoomBy(0.6));
+$('#zoomOut').addEventListener('click',()=>zoomBy(1/0.6));
+$('#zoomReset').addEventListener('click',()=>{const p=presetFor(S.view);flyTo(p.pos,p.tgt,700)});
+addEventListener('keydown',e=>{if(curPage!=='model'||e.target.closest('input,textarea')||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='+'||e.key==='=')zoomBy(0.75);else if(e.key==='-'||e.key==='_')zoomBy(1/0.75);else if(e.key==='0')$('#zoomReset').click()});
+
+// ====================================================================
+//  RENDER LOOP
+// ====================================================================
+let W=1,H=1;
+function resizeStage(){const r=stage.getBoundingClientRect();W=Math.max(1,r.width);H=Math.max(1,r.height);renderer.setSize(W,H,false);camera.aspect=W/H;camera.updateProjectionMatrix();
+  const dpr=Math.min(devicePixelRatio,2);hud.width=W*dpr;hud.height=H*dpr;hctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resizeStage).observe(stage);
+
+function onThemeChange(){
+  PAL=isDark()?PAL_D:PAL_L;paintMap();farMat.color.set(PAL.ground);poleMat.color.set(PAL.pole);headMat.color.set(PAL.head);edgeMat.color.set(PAL.carEdge);
+  const c=new THREE.Color(PAL.scene);scene.background=c;scene.fog.color.copy(c);
+  baseMap.width=0;if(S.sel)setHighlight(S.sel);drawCoverage();
+}
+const corners8=[];for(let i=0;i<8;i++)corners8.push(new V3(i&1?0.95:-0.95,i&2?1.4:0.1,i&4?2.2:-2.2));
+let lastHud='';
+function drawPOV(ph){
+  hctx.clearRect(0,0,W,H);
+  const showPOV=S.view==='installed'||(S.view==='mounting'&&S.step===CHECK_STEP);
+  if(S.view==='installed'){
+    const pill=(t,c)=>`<span class="pill"><i style="background:${c}"></i>${t}</span>`;
+    const hs=CAMS.map(cc=>pill(`${cc.id} · ${cc.appName}`,cc.car)).join('')+pill('Out of view',PAL.carN);
+    if(hs!==lastHud){$('#hudTop').innerHTML=hs;lastHud=hs}
+  }else if(lastHud){$('#hudTop').innerHTML='';lastHud=''}
+  if(!showPOV)return null;
+  const iw=Math.round(clamp(W*0.17,96,180)),m=8,g=6,hs=CAMS.map(cc=>Math.round(iw/aspectOf(cc))),rowH=Math.max(...hs);
+  return{rects:CAMS.map((cc,i)=>{const col=i%2,row=i>>1;return{x:W-m-(2-col)*iw-(1-col)*g,y:H-m-(2-row)*rowH-(1-row)*g,w:iw,h:hs[i]}})};
+}
+function drawPOVFrames(pov){
+  const ff=getComputedStyle(document.body).fontFamily;
+  pov.rects.forEach((r,i)=>{
+    const cam=SENS[i],cc=CAMS[i];hctx.save();hctx.beginPath();hctx.rect(r.x,r.y,r.w,r.h);hctx.clip();
+    hctx.lineWidth=1.3;hctx.strokeStyle=cc.col;
+    for(const c of cars){if(!c.g.visible)continue;const p=c.g.position;if((p.x-cam.position.x)**2+(p.z-cam.position.z)**2>P.range**2)continue;
+      let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,ok=true;
+      for(const k of corners8){const v=k.clone().applyMatrix4(c.g.matrixWorld).project(cam);if(v.z>1){ok=false;break}x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y)}
+      if(!ok||x1<-1||x0>1||y1<-1||y0>1)continue;
+      const X=v=>r.x+(v+1)/2*r.w,Y=v=>r.y+(1-v)/2*r.h;const w=X(x1)-X(x0),h=Y(y0)-Y(y1);if(w<3)continue;
+      hctx.strokeRect(X(x0),Y(y1),w,h)}
+    hctx.restore();
+    hctx.lineWidth=2;hctx.strokeStyle=cc.col;hctx.beginPath();hctx.roundRect(r.x,r.y,r.w,r.h,5);hctx.stroke();
+    hctx.font='600 10px '+ff;const t=`${cc.id} · ${cc.appName}`,tw=hctx.measureText(t).width+10;
+    hctx.fillStyle='rgba(0,0,0,.6)';hctx.fillRect(r.x+4,r.y+4,tw,15);hctx.fillStyle='#fff';hctx.fillText(t,r.x+9,r.y+15);
+  });
+}
+let stageOn=true;
+new IntersectionObserver(es=>{stageOn=es[0].isIntersecting}).observe(stage);
+let last=performance.now();
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  let ph;for(let i=0;i<S.speed;i++)ph=updateTraffic(dt);
+  detectCars();headsFor(ph);
+  if(!stageOn||W<2)return;
+  S.e+=(S.eT-S.e)*Math.min(1,dt*6);if(Math.abs(S.eT-S.e)<1e-3)S.e=S.eT;
+  for(const o of MOV){const u=o.userData;if(u.mk<1)u.mk=Math.min(1,u.mk+dt/0.9);
+    o.position.copy(u.base).addScaledVector(u.ex,S.e).addScaledVector(u.mo,1-ease(u.mk))}
+  if(bandsG.userData.bandK!=null&&bandsG.userData.bandK<1){bandsG.userData.bandK=Math.min(1,bandsG.userData.bandK+dt/1.2);const s=1+0.22*(1-ease(bandsG.userData.bandK));bandsG.children.forEach(b=>b.scale.set(s,1,s))}
+  if(tween){const k=Math.min(1,(now-tween.s)/tween.d),e=ease(k);camera.position.lerpVectors(tween.p0,tween.p1,e);controls.target.lerpVectors(tween.t0,tween.t1,e);if(k>=1)tween=null}
+  controls.update();
+  renderer.setScissorTest(false);renderer.setViewport(0,0,W,H);renderer.render(scene,camera);
+  const pov=drawPOV(ph);
+  if(pov){
+    const dv=R3.dev.visible,fv=frustG.visible,us=covU.uShow.value;R3.dev.visible=false;frustG.visible=false;covU.uShow.value=0;
+    renderer.setScissorTest(true);
+    pov.rects.forEach((r,i)=>{const y=H-r.y-r.h;renderer.setViewport(r.x,y,r.w,r.h);renderer.setScissor(r.x,y,r.w,r.h);renderer.render(scene,SENS[i])});
+    renderer.setScissorTest(false);R3.dev.visible=dv;frustG.visible=fv;covU.uShow.value=us;
+    drawPOVFrames(pov);
+  }
+  layoutOverlay(W,H);
+}
+
+
+// ====================================================================
+//  COVERAGE LAB WINDOW
+// ====================================================================
+const SL=[
+  {k:'height',l:'Mount height (box centre)',min:3.5,max:8,step:0.1,f:v=>v.toFixed(1)+' m'},
+  {k:'poleD',l:'Pole diameter',min:150,max:300,step:5,f:v=>v+' mm'},
+  {k:'range',l:'Useful detection range',min:40,max:120,step:5,f:v=>v+' m'},
+];
+const AIM=[{k:'toe',l:'Turn left / right',min:-45,max:45,f:v=>(v>0?'+':'')+v+'°'},{k:'pitch',l:'Tilt down',min:4,max:40,f:v=>v+'°'}];
+$('#sliders').innerHTML=SL.map(s=>`<label class="slider" for="sl-${s.k}"><span>${s.l}</span><output id="out-${s.k}"></output><input type="range" id="sl-${s.k}" min="${s.min}" max="${s.max}" step="${s.step}"></label>`).join('');
+$('#aimRows').innerHTML=CAMS.map((cc,i)=>`<div class="aimrow"><div class="aimh"><i style="background:${cc.col}"></i><b>Camera ${cc.id}</b><span>${cc.appName} approach · ${cc.model}</span></div>
+  ${AIM.map(a=>`<label class="slider" for="aim-${i}-${a.k}"><span>${a.l}</span><output id="out-aim-${i}-${a.k}"></output><input type="range" id="aim-${i}-${a.k}" min="${a.min}" max="${a.max}" step="1"></label>`).join('')}</div>`).join('');
+let raf=0;
+const fillSlider=(el,s)=>el.style.setProperty('--p',((+el.value-s.min)/(s.max-s.min)*100).toFixed(2)+'%');
+const kick=k=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>onParams(k))};
+SL.forEach(s=>$('#sl-'+s.k).addEventListener('input',e=>{P[s.k]=+e.target.value;$('#out-'+s.k).textContent=s.f(P[s.k]);fillSlider(e.target,s);kick(s.k)}));
+CAMS.forEach((cc,i)=>AIM.forEach(a=>$(`#aim-${i}-${a.k}`).addEventListener('input',e=>{P.aim[i][a.k]=+e.target.value;$(`#out-aim-${i}-${a.k}`).textContent=a.f(P.aim[i][a.k]);fillSlider(e.target,a);kick('aim')})));
+function syncSliders(){
+  SL.forEach(s=>{const el=$('#sl-'+s.k);el.value=P[s.k];fillSlider(el,s);$('#out-'+s.k).textContent=s.f(P[s.k])});
+  CAMS.forEach((cc,i)=>AIM.forEach(a=>{const el=$(`#aim-${i}-${a.k}`);el.value=P.aim[i][a.k];fillSlider(el,a);$(`#out-aim-${i}-${a.k}`).textContent=a.f(P.aim[i][a.k])}));
+  for(const id of['unit','poleL'])if(LBL[id]){LBL[id].el.querySelector('span').textContent=SPECIAL[id].dims();LBL[id].w=0}
+}
+$('#optBtn').addEventListener('click',()=>{$('#optBtn').textContent='Optimizing…';setTimeout(()=>{optimize();onParams('all');$('#optBtn').textContent='Optimize aim';toast('Each camera re-aimed at its own approach')},30)});
+$('#resetBtn').addEventListener('click',()=>{Object.assign(P,cloneP(DEFAULTS));onParams('all')});
+const NOTE={
+  v2:`Each approach has its own camera aimed down the road at its stop line, so every queue is seen from the stop bar back 60 m. All four are the same outdoor USB camera (3.6 mm lens, about 77° × 48° at 720p, our estimate), streaming 720p MJPEG; each turns and tilts on its own swivel bracket. The middle of the intersection is left out because the timing algorithm doesn't need it.<br><br><b>Why no camera looks at the sky:</b> sky wastes pixels and lets the sun shine straight into the lens, and camera D faces west, into the sunset during the evening rush hour. The optimizer keeps each picture's top edge no more than ${SKY_MAX}° above the horizon.`,
+  v1:`Design v1 used two 102° wide cameras on opposite side walls. Two cameras cover about 204° of horizon, but from a corner pole the four approaches span about 250°, so the far ends of the side-road queues fell outside both views. Its settings are fixed here for comparison.`};
+function setDesign(d){
+  S.design=d;$$('#designSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===d));
+  $('#fovNote').innerHTML=NOTE[d];$('#ctlFields').disabled=d==='v1';$('#ctlFields').style.opacity=d==='v1'?.45:1;
+  $('#optBtn').disabled=d==='v1';$('#resetBtn').disabled=d==='v1';
+  $('#legendCams').innerHTML=(d==='v1'?CAMS_V1:CAMS).map(cc=>`<span><i style="background:${cc.col}"></i>Camera ${cc.id}${d==='v1'?' (wide)':' · '+cc.appName}</span>`).join('')+`<span><i style="border:1.5px dashed var(--fg-2)"></i>60 m queue zone</span>`;
+  renderCovResults();drawCoverage();
+}
+$$('#designSeg button').forEach(b=>b.addEventListener('click',()=>setDesign(b.dataset.d)));
+function renderCovResults(){
+  const C=S.design==='v1'?COV1:COV;if(!C)return;const nm={N:'North',S:'South',E:'East',W:'West',X:'Intersection'};
+  const meter=(v,soft,lowAt,mark)=>v==null?'<span style="color:var(--fg-3)">not needed</span>':`<div class="meter"><div class="tr${soft?' soft':''}"><i style="width:${(v*100).toFixed(1)}%"></i>${mark?'<b style="left:90%"></b>':''}</div><span class="${v<lowAt?'low':''}">${Math.round(v*100)}%</span></div>`;
+  $('#covRes').innerHTML=`<div class="h">Approach</div><div class="h">Stop-bar queue<br>first 30 m</div><div class="h">Whole queue<br>60 m</div>`+
+    ['N','S','E','W','X'].map(k=>`<div class="nm">${nm[k]}</div><div>${k==='X'?meter(null):meter(C[k].near,false,.9,true)}</div><div>${k==='X'?meter(null):meter(C[k].all,true,.6,false)}</div>`).join('');
+  const sn=Math.round(C.S.near*100),sa=Math.round(C.S.all*100);
+  $('#covWhy').hidden=S.design==='v1'||sn>=sa;
+  $('#covWhy').innerHTML=`<b>Why South shows ${sn}% at the stop line but ${sa}% for the whole line of cars:</b> the south stop line is right next to the pole, so part of it falls below the bottom edge of camera A's picture, while the waiting cars farther back are fully in view.`;
+}
+const covC=$('#covCanvas'),offC=document.createElement('canvas');offC.width=offC.height=200;
+const baseMap=document.createElement('canvas');
+function drawCoverage(){
+  const v1=S.design==='v1',C=v1?COV1:COV;if(!C)return;
+  const cfg=v1?CAMS_V1:CAMS,vps=v1?VP1:VPs,cams=v1?SENS1:SENS,poss=cams.map(q=>q.position),range=(v1?P1:P).range;
+  const css=covC.clientWidth||360,dpr=Math.min(devicePixelRatio,2),N=Math.round(css*dpr);
+  if(covC.width!==N){covC.width=covC.height=N}
+  const ctx=covC.getContext('2d'),s=N/160,c0=N/2,G=200;
+  if(baseMap.width!==N){baseMap.width=baseMap.height=N;drawMap(baseMap.getContext('2d'),s,c0,c0,90)}
+  ctx.drawImage(baseMap,0,0);
+  const oc=offC.getContext('2d'),img=oc.createImageData(G,G),cols=cfg.map(cc=>new THREE.Color(cc.col)),cx=cfg.map(()=>[0,0,0]);
+  for(let j=0;j<G;j++)for(let i=0;i<G;i++){const x=(i+0.5)/G*160-80,z=(j+0.5)/G*160-80;let r=0,g=0,b=0,k=0;
+    for(let q=0;q<cfg.length;q++){const p=poss[q];if((x-p.x)**2+(z-p.z)**2<=range*range&&visE(vps[q].elements,x,0.5,z)){r+=cols[q].r;g+=cols[q].g;b+=cols[q].b;k++;cx[q][0]+=x;cx[q][1]+=z;cx[q][2]++}}
+    if(!k)continue;const o=(j*G+i)*4;img.data[o]=r/k*255;img.data[o+1]=g/k*255;img.data[o+2]=b/k*255;img.data[o+3]=k>1?150:120}
+  oc.putImageData(img,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(offC,0,0,N,N);
+  const ff=getComputedStyle(document.body).fontFamily,lbl=(t,x,y,bg)=>{ctx.font=`600 ${10.5*dpr}px ${ff}`;const tw=ctx.measureText(t).width+10*dpr;ctx.fillStyle=bg;ctx.fillRect(x-tw/2,y-9*dpr,tw,18*dpr);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y)};
+  ctx.setLineDash([5*dpr,4*dpr]);ctx.lineWidth=1.4*dpr;ctx.strokeStyle='rgba(255,255,255,.95)';
+  for(const k of['N','S','E','W']){const z=ZONES[k];ctx.strokeRect(c0+z.x0*s,c0+z.z0*s,(z.x1-z.x0)*s,(z.z1-z.z0)*s)}
+  ctx.setLineDash([]);
+  // zone percentages at the far end of each queue, camera labels on each footprint
+  const far={N:[-ROAD/2,-STOP-64],S:[ROAD/2,STOP+64],E:[STOP+64,-ROAD/2],W:[-STOP-64,ROAD/2]};
+  for(const k of['N','S','E','W'])lbl(`${k} ${Math.round(C[k].all*100)}%`,c0+far[k][0]*s,c0+far[k][1]*s,'rgba(15,18,24,.8)');
+  cfg.forEach((cc,q)=>{const d=new V3(0,0,-1).applyQuaternion(cams[q].quaternion);d.y=0;d.normalize();const x=c0+poss[q].x*s,y=c0+poss[q].z*s;
+    ctx.strokeStyle=cc.col;ctx.lineWidth=2.5*dpr;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+d.x*12*s,y+d.z*12*s);ctx.stroke()});
+  cfg.forEach((cc,q)=>{if(!cx[q][2])return;let lx=cx[q][0]/cx[q][2],lz=cx[q][1]/cx[q][2];lx=clamp(lx,-70,70);lz=clamp(lz,-74,74);
+    lbl(`${cc.id}${v1?'':' · '+cc.appName} · ${cc.h}°×${cc.v}°`,c0+lx*s,c0+lz*s,cc.col)});
+  ctx.fillStyle='#111';ctx.strokeStyle='#fff';ctx.lineWidth=1.5*dpr;ctx.beginPath();ctx.arc(c0+POLE_POS.x*s,c0+POLE_POS.z*s,4*dpr,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(15,18,24,.78)';ctx.fillRect(8*dpr,8*dpr,22*dpr,22*dpr);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${11*dpr}px ${ff}`;ctx.fillText('N',19*dpr,19*dpr);
+  ctx.beginPath();ctx.moveTo(19*dpr,1*dpr);ctx.lineTo(15*dpr,7*dpr);ctx.lineTo(23*dpr,7*dpr);ctx.fill();
+  ctx.textAlign='left';ctx.fillStyle='rgba(15,18,24,.78)';ctx.fillRect(N-8*dpr-20*s-6*dpr,N-26*dpr,20*s+12*dpr,18*dpr);
+  ctx.strokeStyle='#fff';ctx.beginPath();ctx.moveTo(N-8*dpr-20*s,N-12*dpr);ctx.lineTo(N-8*dpr,N-12*dpr);ctx.stroke();ctx.fillStyle='#fff';ctx.fillText('20 m',N-8*dpr-20*s,N-19*dpr);
+}
+
+// ---------- large intersections: two units on opposite corners ----------
+function renderScale(){
+  const big=S.big,hw=big?40:27,c=180,R=150,svgEl=[];
+  const road=`<rect x="${c-hw}" y="0" width="${2*hw}" height="360" fill="var(--sc-road)"/><rect x="0" y="${c-hw}" width="360" height="${2*hw}" fill="var(--sc-road)"/>`;
+  const lanes=[];const n=big?3:2;for(let i=1;i<n;i++){const o=hw*i/n;for(const sg of[-1,1]){lanes.push(`<path d="M${c+sg*o} 0V${c-hw-6}M${c+sg*o} ${c+hw+6}V360M0 ${c+sg*o}H${c-hw-6}M${c+hw+6} ${c+sg*o}H360" stroke="var(--sc-mark)" stroke-width="1.2" stroke-dasharray="7 9"/>`)}}
+  const center=`<path d="M${c} 0V${c-hw-6}M${c} ${c+hw+6}V360M0 ${c}H${c-hw-6}M${c+hw+6} ${c}H360" stroke="#e0b14a" stroke-width="1.6"/>`;
+  const wedge=(ux,uy,tx,ty,col,half=30)=>{const a=Math.atan2(ty-uy,tx-ux),a0=a-half*D2R,a1=a+half*D2R,r=Math.hypot(tx-ux,ty-uy)*1.15;
+    return `<path d="M${ux} ${uy}L${ux+r*Math.cos(a0)} ${uy+r*Math.sin(a0)}A${r} ${r} 0 0 1 ${ux+r*Math.cos(a1)} ${uy+r*Math.sin(a1)}Z" fill="${col}" fill-opacity=".28" stroke="${col}" stroke-width="1.2"/>`};
+  const q=hw/2,units=[];let w='';
+  const col={N:'#12a594',S:'#2f80ed',E:'#ee7c1b',W:'#8b5cf6'};
+  const tgt={N:[c-q,c-hw-70],S:[c+q,c+hw+70],E:[c+hw+70,c-q],W:[c-hw-70,c+q]};
+  if(!big){const u=[c+hw+10,c+hw+10];units.push(u);for(const k of['N','S','E','W'])w+=wedge(u[0],u[1],tgt[k][0],tgt[k][1],col[k],k==='S'||k==='E'?34:22)}
+  else{const u1=[c+hw+10,c+hw+10],u2=[c-hw-10,c-hw-10];units.push(u1,u2);
+    for(const k of['S','E'])for(const off of[-q*0.6,q*0.6]){const t=k==='S'?[tgt.S[0]+off,tgt.S[1]]:[tgt.E[0],tgt.E[1]+off];w+=wedge(u1[0],u1[1],t[0],t[1],col[k],16)}
+    for(const k of['N','W'])for(const off of[-q*0.6,q*0.6]){const t=k==='N'?[tgt.N[0]+off,tgt.N[1]]:[tgt.W[0],tgt.W[1]+off];w+=wedge(u2[0],u2[1],t[0],t[1],col[k],16)}}
+  const dots=units.map((u,i)=>`<circle cx="${u[0]}" cy="${u[1]}" r="7" fill="var(--fg)" stroke="var(--card)" stroke-width="2.5"/><text x="${u[0]+(i?-12:12)}" y="${u[1]+(i?-10:20)}" font-size="12" font-weight="650" fill="var(--fg)" text-anchor="${i?'end':'start'}">Unit ${i+1}</text>`).join('');
+  const labels=['N','S','E','W'].map(k=>`<text x="${tgt[k][0]}" y="${tgt[k][1]+(k==='N'?-14:k==='S'?22:5)}" font-size="11" fill="var(--fg-2)" text-anchor="middle" dx="${k==='E'?26:k==='W'?-26:0}">${{N:'North',S:'South',E:'East',W:'West'}[k]}</text>`).join('');
+  $('#scaleSvg').innerHTML=`<svg viewBox="0 0 360 360" role="img" aria-label="${big?'Two units on opposite corners of a large intersection':'One unit on a corner of a standard intersection'}"><rect width="360" height="360" fill="var(--sc-ground)"/>${road}${lanes.join('')}${center}${w}${labels}${dots}</svg>`;
+  $('#scaleText').innerHTML=big?`<b>Large intersection, 3 or more lanes each way.</b> Wide roads push the far lanes outside a single camera's view and the opposite approaches get too far away to count accurately. Use two identical units on opposite corners. Unit 1 covers the south and east approaches beside it, unit 2 covers north and west, and each unit puts two of its cameras on each of its approaches. Both units send counts to the same timing algorithm.`
+    :`<b>Standard intersection, up to 2 lanes each way.</b> One unit on a corner pole covers all four approaches, one camera per approach.`;
+}
+$$('#scaleSeg button').forEach(b=>b.addEventListener('click',()=>{S.big=b.dataset.s==='big';$$('#scaleSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderScale()}));
+
+// ====================================================================
+//  PARTS & BUDGET WINDOW
+// ====================================================================
+let bomFilter='all';
+const buyLinks=b=>b.buy?'<div class="buy">'+b.buy.map(([l,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join('')+'</div>':(b.type==='print'?'<div class="buy"><span>Print from device.scad</span></div>':'');
+const lineCost=b=>b.cost*b.qty,V1_TOTAL=599;
+function renderBOM(){
+  const rows=BOM.filter(b=>bomFilter==='all'||b.type===bomFilter);
+  const total=BOM.reduce((a,b)=>a+lineCost(b),0),core=BOM.filter(b=>!b.opt).reduce((a,b)=>a+lineCost(b),0);
+  const nPrint=BOM.filter(b=>b.type==='print').reduce((a,b)=>a+b.qty,0);
+  const pct=v=>(v/1000*100).toFixed(1)+'%';
+  $('#budget').innerHTML=`<div class="budget-top"><strong>$${total}</strong><span style="color:var(--fg-2)">estimated total, LTE router included · ${nPrint} printed parts</span></div>
+  <div class="bmeter" role="img" aria-label="Budget meter: $${total} of $1000"><i style="width:${pct(core)}"></i><i style="left:${pct(core)};width:${pct(total-core)};background:color-mix(in srgb,var(--ok) 45%,transparent);border-radius:0 5px 5px 0"></i><b style="left:75%"></b><b style="left:calc(100% - 2px)"></b></div>
+  <div class="bscale"><span style="left:0;transform:none">$0</span><span style="left:${pct(core)}">build</span><span style="left:75%">$750 target</span><span style="left:100%;transform:translateX(-100%)">$1000 cap</span></div>
+  <div class="costnote"><b>vs design v1 ($${V1_TOTAL}):</b> +$${total-V1_TOTAL}${core<=750?', still under the $750 target':`; $${core-750} over the $750 target (ways to save below)`}. Includes the pole-mount kit and the safety tether.<br><b>Ways to save:</b> Pi 5 2 GB (−$45), borrow the banding tool.</div>`;
+  $('#bomTable').innerHTML=`<thead><tr><th>Part</th><th class="num">Qty</th><th>Source</th><th class="num">Est. cost</th></tr></thead><tbody>${rows.map(b=>{const p=PART3D.find(q=>q.id===b.link)||PART3D.find(q=>q.bom===b.id);
+    return `${b.group&&b===rows.find(r=>r.group===b.group)?`<tr><td colspan="4" class="grp">${esc(b.group)}</td></tr>`:''}<tr class="${p?'click':''}" data-bom="${b.id}"><td>${b.n?`<span class="num-badge">${b.n}</span>`:''}<b style="font-weight:600">${esc(b.name)}</b>${b.opt?' <span class="chip opt">Optional</span>':''}${b.star?' <span class="chip opt">★ New / changed</span>':''}<div class="spec">${esc(b.spec)}</div></td><td class="num">${b.unit||b.qty}</td><td><span class="chip ${b.type}">${b.type==='print'?'3D print':'Buy'}</span>${buyLinks(b)}</td><td class="num">${lineCost(b)>0?'$'+lineCost(b):'<span style="color:var(--fg-3)">filament</span>'}</td></tr>`}).join('')}</tbody>
+  <tfoot><tr><td colspan="3" style="font-weight:600;padding:8px">Total${bomFilter!=='all'?' (all rows)':''}</td><td class="num" style="font-weight:700;padding:8px">$${total}</td></tr></tfoot>`;
+  $$('#bomTable tr.click').forEach(tr=>tr.addEventListener('click',e=>{if(e.target.closest('a'))return;const b=bomById[tr.dataset.bom],p=PART3D.find(q=>q.id===b.link)||PART3D.find(q=>q.bom===b.id);openWin('viewer');select(p.id)}));
+}
+$$('#bomSeg button').forEach(b=>b.addEventListener('click',()=>{bomFilter=b.dataset.f;$$('#bomSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderBOM()}));
+function bomCSV(){const q=s=>'"'+String(s).replace(/"/g,'""')+'"';return ['Part,Qty,Source,Spec,Unit USD,Line USD,Buy links',...BOM.map(b=>[q(b.name+(b.opt?' (optional)':'')),b.qty,b.type==='print'?'3D print':'Buy',q(b.spec),b.cost,lineCost(b),q((b.buy||[]).map(x=>x[0]+': '+x[1]).join(' | '))].join(','))].join('\n')}
+
+// ====================================================================
+//  WIRING WINDOW
+// ====================================================================
+function renderWiring(){
+  const box=(x,y,w,h,t,s,accent)=>`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="var(--card)" stroke="${accent||'var(--line)'}" stroke-width="${accent?1.6:1}"/><text x="${x+10}" y="${y+20}" font-size="12.5" font-weight="650" fill="var(--fg)">${t}</text>${(s||'').split('|').map((l,i)=>`<text x="${x+10}" y="${y+37+i*14}" font-size="10.5" fill="var(--fg-2)">${l}</text>`).join('')}</g>`;
+  const ln=(d,c,w=2.4,dash)=>`<path d="${d}" fill="none" stroke="var(${c})" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${dash?` stroke-dasharray="${dash}"`:''}/>`;
+  const tag=(x,y,t)=>`<text x="${x}" y="${y}" font-size="10" fill="var(--fg-3)">${t}</text>`;
+  const svgS=`<svg viewBox="0 0 980 540" role="img" aria-label="Wiring diagram">
+  ${ln('M170 66H210','--w-ac',3)}
+  ${ln('M360 60H400M530 60H570M700 60H740','--w-dc')}${ln('M360 74H400M530 74H570M700 74H740','--w-dc0')}
+  ${box(20,30,150,72,'City 120 V outlet','GFCI · extra-duty in-use cover|Licensed electrician')}
+  ${box(210,30,150,72,'12 V adapter','IP67 LED driver with plug|Strapped to the pole')}
+  ${box(400,30,130,72,'Cable-entry plate','Split grommet|Drip loop below')}
+  ${box(570,30,130,72,'Fuse + surge','4 A inline fuse|5KP15A TVS diode')}
+  ${box(740,30,150,72,'5 V converter','Pololu D36V50F5|12 V → 5 V, 5.5 A')}
+  ${tag(214,122,'120 V never enters the box')}
+  ${ln('M800 102V240','--w-dc',3)}${ln('M820 102V240','--w-dc0',3)}
+  ${tag(830,165,'5 V · 18 AWG')}${tag(830,179,'USB-C pigtail')}
+  ${ln('M650 102V200H930V240','--w-dc',2)}${tag(660,195,'12 V to the router')}
+  ${box(640,240,230,140,'Raspberry Pi 5 · 4 GB','USB 3 ← Cameras A and B|USB 2 ← Cameras C and D|USB-C ← 5 V converter|Ethernet → LTE router|PCIe → AI HAT+','var(--accent)')}
+  ${box(30,240,200,46,'Camera A · South','Outdoor USB camera · right wall')}
+  ${box(30,300,200,46,'Camera B · East','Outdoor USB camera · left wall')}
+  ${box(30,360,200,46,'Camera C · North','Outdoor USB camera · lid')}
+  ${box(30,420,200,46,'Camera D · West','Outdoor USB camera · lid')}
+  ${ln('M230 263H640','--w-usb',3)}${ln('M230 323H600V292H640','--w-usb',3)}
+  ${ln('M230 383H610V320H640','--w-usb',3)}${ln('M230 443H620V348H640','--w-usb',3)}
+  ${tag(290,256,'Camera lead · split grommet')}${tag(290,316,'Camera lead · split grommet')}
+  ${tag(290,376,'Camera lead · split grommet')}${tag(290,436,'Camera lead · split grommet')}
+  ${box(640,420,230,52,'AI HAT+ 13 TOPS','Hailo-8L · runs all 4 streams')}
+  ${ln('M700 380V420','--w-pcie',4)}${tag(708,404,'PCIe flex')}
+  ${box(890,240,80,60,'LTE router','Ethernet|to the Pi')}${ln('M870 280H890','--w-coax',2.4)}
+  ${box(380,490,170,44,'microSD 128 GB','High endurance')}${ln('M550 512H600V380H640','--fg-3',1.5,'2 3')}
+  </svg>`;
+  const rows=[['120 V','GFCI outlet → adapter plug','The adapter\'s own plug','City electrician fits the outlet and the in-use cover'],['12 V DC','Adapter → cable-entry plate → fuse','The adapter\'s outdoor cord','Drip loop below the box; strap the adapter to the pole'],['+12 V (fused)','Fuse → TVS → converter VIN','18 AWG red','TVS across +12 V and 0 V, right at the entry'],['0 V','Adapter − → TVS → converter GND','18 AWG black',''],['5 V DC','Converter VOUT/GND → USB-C pigtail → Pi','18 AWG red and black, ≤ 30 cm','Set PSU_MAX_CURRENT=5000 and usb_max_current_enable=1'],['Camera A','Camera lead → grommet 1 → USB 3 (top)','The camera\'s own USB lead','Drip loop below the box'],['Camera B','Camera lead → grommet 2 → USB 3 (bottom)','The camera\'s own USB lead',''],['Camera C','Camera lead → grommet 3 → USB 2 (top)','The camera\'s own USB lead','Leave 300 mm slack so the lid can open'],['Camera D','Camera lead → grommet 4 → USB 2 (bottom)','The camera\'s own USB lead',''],['LTE router','Fused 12 V → router; router Ethernet → Pi','18 AWG pair + 0.5 m patch cable','Router antennas stay inside the plastic box']];
+  $('#wiringBody').innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--fg-2);margin-bottom:10px">${[['--w-ac','120 V (outside the box)'],['--w-dc','+12 V / +5 V'],['--w-dc0','0 V'],['--w-usb','USB'],['--w-coax','Ethernet'],['--w-pcie','PCIe flex']].map(([c,t])=>`<span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:var(${c});vertical-align:middle;margin-right:5px"></i>${t}</span>`).join('')}</div>
+  <div style="overflow-x:auto">${svgS}</div>
+  <h3 style="font-size:13.5px;margin:18px 0 6px">Wire list</h3>
+  <div style="overflow-x:auto"><table class="bom"><thead><tr><th>Circuit</th><th>From → to</th><th>Wire</th><th>Note</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+// ====================================================================
+//  device.scad WINDOW + GUIDE
+// ====================================================================
+const SCAD=$('#scadSrc').textContent.replace(/^\n/,'');
+function hl(line){
+  const re=/(\/\/.*$)|(\/\*.*?\*\/)|("(?:[^"\\]|\\.)*")|\b(module|function|if|else|for|let|true|false)\b|\b(translate|rotate|cube|cylinder|sphere|hull|difference|union|color|mirror|linear_extrude|polygon|offset|echo|str|tan|sin|cos|len|scale|sqrt)\b|(\b\d+(?:\.\d+)?\b)/g;
+  let out='',i=0,m;while((m=re.exec(line))){out+=esc(line.slice(i,m.index));const cls=m[1]||m[2]?'c':m[3]?'s':m[4]?'k':m[5]?'f':'n';out+=`<span class="${cls}">${esc(m[0])}</span>`;i=re.lastIndex}
+  return out+esc(line.slice(i));
+}
+$('#scadCode').innerHTML=SCAD.split('\n').map(l=>`<span class="ln">${hl(l)||' '}</span>`).join('');
+$('#scadInfo').textContent=`OpenSCAD · ${SCAD.split('\n').length} lines`;
+let guideTab='print';
+function renderGuide(){
+  $('#guideTabs').innerHTML=Object.entries(GUIDE).map(([k,g])=>`<button class="side-item" data-g="${k}" aria-current="${k===guideTab}"><span class="nm">${g.t}</span></button>`).join('');
+  $('#guideDoc').innerHTML=GUIDE[guideTab].h;
+  $$('#guideTabs [data-g]').forEach(b=>b.addEventListener('click',()=>{guideTab=b.dataset.g;renderGuide()}));
+}
+
+// ====================================================================
+//  INIT
+// ====================================================================
+{const t=BOM.reduce((a,b)=>a+b.cost*b.qty,0),c=BOM.filter(b=>!b.opt).reduce((a,b)=>a+b.cost*b.qty,0);
+ $('#introStats').innerHTML=`<div class="stat"><b>$${t}</b><span>parts, LTE included</span></div><div class="stat"><b>4 cameras</b><span>one per approach</span></div><div class="stat"><b>13 TOPS</b><span>on-device detection</span></div><div class="stat"><b>12 V</b><span>inside the box; 120 V stays outside</span></div>`}
+showPage(location.hash.slice(1)||'model',false);setTimeout(()=>scrollTo(0,0),0);
+buildSidebar();renderInspector();renderBOM();renderWiring();renderGuide();
+onThemeChange();
+updateV1();COV1=coverage(VP1,SENS1.map(c=>c.position),P1.range,SAMP);
+onParams('all');setDesign('v2');renderScale();
+resizeStage();
+setView('installed',false);
+{const p=presetFor('installed');camera.position.copy(p.pos);controls.target.copy(p.tgt)}
+addEventListener('resize',()=>drawCoverage());
+requestAnimationFrame(frame);
+
+</script>
+
+</body></html>
